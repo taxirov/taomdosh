@@ -1,0 +1,54 @@
+# Flutter ilova: analiz, testlar va APK. APK "Artifacts" bo'limidan yuklab olinadi.
+name: mobile
+
+on:
+  push:
+    paths: ['apps/mobile/**', '.github/workflows/mobile.yml']
+  pull_request:
+    paths: ['apps/mobile/**', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: apps/mobile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+
+      # Release kaliti (ixtiyoriy): repo Settings → Secrets → ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+      # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Bo'lmasa APK debug kalit bilan imzolanadi.
+      - name: Imzo kaliti
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "$KEYSTORE" | base64 -d > android/app/upload.jks
+          printf 'storeFile=upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
+
+      # API manzili: repo Settings → Variables → API_URL (masalan, https://api.taomdosh.uz/v1)
+      - run: flutter build apk --release --dart-define=API_URL=${{ vars.API_URL || 'https://api.taomdosh.uz/v1' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: taomdosh-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk

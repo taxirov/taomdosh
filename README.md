@@ -8,7 +8,7 @@ Loyiha tuzilishi:
 | Papka | Nima |
 |---|---|
 | `apps/api` | Backend — NestJS + PostgreSQL 16 (Drizzle ORM) + Redis |
-| `apps/mobile` | Flutter ilova (Android) — keyingi bosqich |
+| `apps/mobile` | Flutter ilova (Android) — [apps/mobile/README.md](apps/mobile/README.md) |
 
 Arxitektura va ma'lumotlar bazasi hujjati: "Taomdosh — System design va Database dizayn".
 
@@ -40,6 +40,14 @@ npm run test:e2e              # to'liq oqim (Postgres, Redis va seed kerak)
 | Holat | `GET /health` |
 
 To'liq sxema: `http://localhost:3000/docs`.
+
+## Mobil ilova
+
+```bash
+cd apps/mobile && flutter pub get && flutter run      # emulyator lokal API ga ulanadi
+```
+
+APK: GitHub **Actions → mobile → Artifacts**. Batafsil: [apps/mobile/README.md](apps/mobile/README.md).
 
 ## Serverga joylash
 
