@@ -20,16 +20,25 @@ To'liq dizayn: claude.ai dagi "Taomdosh — System design va Database dizayn" hu
 - `src/db/schema.ts` — barcha jadvallar (5 domen). O'zgartirgandan keyin: `npm run db:generate` → `npm run db:migrate`.
 - `src/domain/*` — sof hisob-kitob funksiyalari (testlangan, `domain.spec.ts`): nutrition (Mifflin–St Jeor), portions (Pᵢ = Eᵢ·sₘ·kᵢ/ΣK_d, qozon hajmi, kᵢ o'rganish), schedule (vaqt zonasi, pishirish/eslatma/qulflash vaqtlari), money (bo'lish, qarzlarni soddalashtirish), duty (navbat aylanishi), units (bozor uchun kg/dona).
 - `src/common` — Drizzle/Redis provayderlari, JWT guard (`@Public()`, `@CurrentUser()`, `requireMember`).
-- `src/modules`: auth ✅, users ✅, groups ✅ (navbatchilik bilan), catalog ✅ (taom, cookbook, sevimlilar).
+- `src/modules`: auth ✅, users ✅, groups ✅ (navbatchilik bilan), catalog ✅ (taom, cookbook, sevimlilar),
+  meals ✅ (reja, qatnashuv, qulflash poller'i, oshpaz ko'rinishi, baho; `portion-planner.ts` — kutilgan/muzlatiladigan porsiyalar),
+  shopping ✅ (xarid ro'yxati, zaxira, ledger), expenses ✅ (ulushlar, balanslar, qarzlar).
+- `src/db/seed` — 134 masalliq, 46 taom (uz/ru/en), 3 cookbook; `npm run db:seed` qayta ishga tushirishga xavfsiz.
+- `test/flow.e2e-spec.ts` — to'liq oqim (`npm run test:e2e`, haqiqiy Postgres + Redis + seed kerak).
+- Poller: `MEAL_LOCK_POLLER=off` uni o'chiradi (e2e testda `MealsService.lockDue(now)` qo'lda chaqiriladi).
+- Kelishuvlar: bola (boshqariladigan hisob) porsiyasi xarajatda ota-onaga yoziladi; qatnashuv belgilanmagan a'zo — "yeyman";
+  xarid ro'yxatini qayta tuzish faqat avtomatik `pending` qatorlarni almashtiradi (qo'lda qo'shilgan va olinganlar qoladi).
 
 ## Qilinadigan ishlar (tartib bilan)
-1. **MealsModule** — `POST /groups/:id/plans` (cookbookni haftaga qo'llash → `meal_instances` + `meal_instance_dishes`, vaqtlar `computeMealTimes`, oshpaz `GroupsService.cookFor`); `GET /groups/:id/meals?from&to`; `PUT /meals/:id/attendance` (status, guests; `lockAt` dan keyin — rad); qulflash: har 30 s poller (`status=planned AND lock_at<=now`, `FOR UPDATE SKIP LOCKED`) bitta tranzaksiyada porsiyalarni (`computePortions`) muzlatadi, `total_servings` to'ldiradi, zaxiradan masalliq ayiradi (`pantry_movements` reason=cooking); `GET /meals/:id/cook-view` (navbatchiga: har a'zo grammi + masshtablangan retsept, vazn/maqsad ko'rsatilmaydi); `POST /meals/:id/feedback` (`updateFactor`).
-2. **ShoppingModule** — ehtiyoj = davrdagi qulflanmagan mahallar (kutilgan porsiyalar bilan) masalliqlari − zaxira; `POST .../shopping/regenerate`, ro'yxat (`toDisplay`), qo'lda qo'shish, "olindi" → zaxiraga (`purchase`); zaxira ro'yxati va tuzatish.
-3. **ExpensesModule** — xarajat qo'shish; `shared_pot` — ulush yo'q; `by_portion` — davrdagi `meal_portions.kcal` ulushiga ko'ra `splitByWeights` (mehmon → host); balanslar va `simplifyDebts`; `settlements`.
-4. **Seed** (`src/db/seed/seed.ts`) — ~120 masalliq (kkal/100 g, oqsil, yog', uglevod, dona og'irligi) va 30–50 mahalliy taom (palov, mastava, sho'rva, lag'mon, manti, chuchvara, dimlama, norin, somsa, qovurma, salatlar, nonushtalar) uz/ru/en, 2–3 tayyor haftalik cookbook (moderation=approved, visibility=public).
-5. e2e test (`test/`): kirish → guruh → cookbook qo'llash → qatnashuv → qulflash → xarid → xarajat → qarzlar.
-6. `Dockerfile` + `docker-compose.yml` (api, postgres, redis, caddy HTTPS) va DigitalOcean'ga joylash yo'riqnomasi.
+1–6-bandlar bajarildi ✅ — keyingisi **7. Flutter ilova**.
+
+1. ✅ **MealsModule** — `POST /groups/:id/plans` (cookbookni haftaga qo'llash → `meal_instances` + `meal_instance_dishes`, vaqtlar `computeMealTimes`, oshpaz `GroupsService.cookFor`); `GET /groups/:id/meals?from&to`; `PUT /meals/:id/attendance` (status, guests; `lockAt` dan keyin — rad); qulflash: har 30 s poller (`status=planned AND lock_at<=now`, `FOR UPDATE SKIP LOCKED`) bitta tranzaksiyada porsiyalarni (`computePortions`) muzlatadi, `total_servings` to'ldiradi, zaxiradan masalliq ayiradi (`pantry_movements` reason=cooking); `GET /meals/:id/cook-view` (navbatchiga: har a'zo grammi + masshtablangan retsept, vazn/maqsad ko'rsatilmaydi); `POST /meals/:id/feedback` (`updateFactor`).
+2. ✅ **ShoppingModule** — ehtiyoj = davrdagi qulflanmagan mahallar (kutilgan porsiyalar bilan) masalliqlari − zaxira; `POST .../shopping/regenerate`, ro'yxat (`toDisplay`), qo'lda qo'shish, "olindi" → zaxiraga (`purchase`); zaxira ro'yxati va tuzatish.
+3. ✅ **ExpensesModule** — xarajat qo'shish; `shared_pot` — ulush yo'q; `by_portion` — davrdagi `meal_portions.kcal` ulushiga ko'ra `splitByWeights` (mehmon → host); balanslar va `simplifyDebts`; `settlements`.
+4. ✅ **Seed** (`src/db/seed/seed.ts`) — ~120 masalliq (kkal/100 g, oqsil, yog', uglevod, dona og'irligi) va 30–50 mahalliy taom (palov, mastava, sho'rva, lag'mon, manti, chuchvara, dimlama, norin, somsa, qovurma, salatlar, nonushtalar) uz/ru/en, 2–3 tayyor haftalik cookbook (moderation=approved, visibility=public).
+5. ✅ e2e test (`test/`): kirish → guruh → cookbook qo'llash → qatnashuv → qulflash → xarid → xarajat → qarzlar.
+6. ✅ `Dockerfile` + `docker-compose.yml` (api, postgres, redis, caddy HTTPS) va DigitalOcean'ga joylash yo'riqnomasi (`deploy/README.md`).
 7. **Flutter ilova** (`apps/mobile`) — UI "Taomdosh UI" artifaktidagi ~29 ekran asosida; terrakota/krem/xantal palitrasi.
 
 ## Lokal ishga tushirish
-README.md ga qarang. Testlar: `cd apps/api && npm test`; tiplar: `npm run typecheck`.
+README.md ga qarang. Testlar: `cd apps/api && npm test`, `npm run test:e2e`; tiplar: `npm run typecheck`.

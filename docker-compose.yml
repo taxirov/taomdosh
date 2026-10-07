@@ -1,0 +1,60 @@
+# Ishlab chiqarish: api + PostgreSQL 16 + Redis + Caddy (avtomatik HTTPS).
+# Sozlamalar: deploy/.env.example → .env (shu papkada). Yo'riqnoma: deploy/README.md
+services:
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://taomdosh:${POSTGRES_PASSWORD:?}@postgres:5432/taomdosh
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-30}
+      TELEGRAM_GATEWAY_TOKEN: ${TELEGRAM_GATEWAY_TOKEN:-}
+      AUTH_TEST_PHONES: ${AUTH_TEST_PHONES:-}
+      AUTH_TEST_CODE: ${AUTH_TEST_CODE:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taomdosh
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: taomdosh
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taomdosh"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMAIN: ${DOMAIN:?}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:
