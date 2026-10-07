@@ -330,14 +330,19 @@ export class GroupsService {
 
   /** Shu kun navbatchi oshpaz */
   async cookFor(groupId: string, date: string): Promise<string | null> {
+    return this.dutyFor(groupId, date, 'cook');
+  }
+
+  /** Shu kun berilgan vazifa bo'yicha navbatchi (qo'lda almashtirish ustun) */
+  async dutyFor(groupId: string, date: string, role: DutyRole): Promise<string | null> {
     const [rot] = await this.db
       .select()
       .from(dutyRotations)
-      .where(and(eq(dutyRotations.groupId, groupId), eq(dutyRotations.dutyRole, 'cook')));
+      .where(and(eq(dutyRotations.groupId, groupId), eq(dutyRotations.dutyRole, role)));
     const manual = await this.db
       .select()
       .from(dutyAssignments)
-      .where(and(eq(dutyAssignments.groupId, groupId), eq(dutyAssignments.date, date), eq(dutyAssignments.dutyRole, 'cook')));
+      .where(and(eq(dutyAssignments.groupId, groupId), eq(dutyAssignments.date, date), eq(dutyAssignments.dutyRole, role)));
     if (!rot?.enabled && manual.length === 0) return null;
     return resolveDuty(rot?.memberOrder ?? [], date, new Map(manual.map((m) => [m.date, m.userId]))).userId;
   }
