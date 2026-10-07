@@ -1,0 +1,15 @@
+# Lokal ishlab chiqish uchun: faqat Postgres va Redis
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taomdosh
+      POSTGRES_PASSWORD: taomdosh
+      POSTGRES_DB: taomdosh
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+volumes:
+  pgdata:
