@@ -22,6 +22,7 @@ import { Public } from '../../common/auth';
 import { Db, InjectDb, InjectRedis } from '../../common/infra.module';
 import { refreshTokens, users } from '../../db/schema';
 import { normalizeLocale } from '../../domain/i18n';
+import { TelegramBotService, TG_LOGIN_TTL_SEC } from './telegram-bot.service';
 
 const CODE_TTL_SEC = 300; // kod 5 daqiqa amal qiladi
 const RESEND_COOLDOWN_SEC = 60;
@@ -108,6 +109,21 @@ class VerifyCodeDto {
   deviceName?: string;
 }
 
+class TelegramCheckDto {
+  @IsString()
+  @Length(10, 64)
+  token: string;
+
+  @IsOptional()
+  @IsString()
+  locale?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 80)
+  deviceName?: string;
+}
+
 class RefreshDto {
   @IsString()
   refreshToken: string;
@@ -123,6 +139,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly cfg: ConfigService,
     private readonly gateway: TelegramGatewayService,
+    private readonly bot: TelegramBotService,
   ) {}
 
   private isTestPhone(phone: string): boolean {
@@ -167,16 +184,42 @@ export class AuthService {
     if (!ok) throw new UnauthorizedException('code_invalid');
     await this.redis.del(`otp:code:${phone}`, `otp:attempts:${phone}`);
 
+    return this.loginByPhone(phone, dto.name, dto.locale, dto.deviceName);
+  }
+
+  /** Tasdiqlangan raqam bilan kirish: foydalanuvchi bo'lmasa — yaratiladi */
+  private async loginByPhone(phone: string, name: string | undefined, locale: string | undefined, deviceName: string | undefined) {
     let [user] = await this.db.select().from(users).where(eq(users.phone, phone));
     const isNew = !user;
     if (!user) {
       [user] = await this.db
         .insert(users)
-        .values({ phone, name: dto.name?.trim() || 'Foydalanuvchi', locale: normalizeLocale(dto.locale) })
+        .values({ phone, name: name?.trim() || 'Foydalanuvchi', locale: normalizeLocale(locale) })
         .returning();
     }
     if (user.status !== 'active') throw new UnauthorizedException('account_blocked');
-    return { ...(await this.issueTokens(user.id, user.locale, dto.deviceName)), user, isNewUser: isNew };
+    return { ...(await this.issueTokens(user.id, user.locale, deviceName)), user, isNewUser: isNew };
+  }
+
+  // ─────────── Telegram bot orqali kirish (bepul) ───────────
+
+  /** Bir martalik token va bot havolasi */
+  async startTelegram(ip: string) {
+    const bot = this.bot.username;
+    if (!bot) throw new ServiceUnavailableException('telegram_bot_disabled');
+    if ((await this.hit(`tg:rate:ip:${ip}`, 3600)) > 60) throw new BadRequestException('too_many_requests');
+    const token = randomBytes(18).toString('base64url');
+    await this.bot.createLogin(token);
+    return { token, url: `https://t.me/${bot}?start=${token}`, expiresIn: TG_LOGIN_TTL_SEC };
+  }
+
+  /** Ilova shu so'rovni bir necha soniyada bir yuboradi: bot tasdiqlaguncha "pending" */
+  async checkTelegram(dto: TelegramCheckDto) {
+    const login = await this.bot.getLogin(dto.token);
+    if (!login) throw new UnauthorizedException('login_expired');
+    if (login.status !== 'confirmed' || !login.phone) return { status: 'pending' as const };
+    await this.bot.consumeLogin(dto.token);
+    return { status: 'ok' as const, ...(await this.loginByPhone(login.phone, login.name, dto.locale, dto.deviceName)) };
   }
 
   async refresh(token: string) {
@@ -237,6 +280,20 @@ export class AuthController {
     return this.auth.verifyCode(dto);
   }
 
+  /** Telegram bot orqali kirishni boshlash → t.me havolasi */
+  @Post('telegram/start')
+  @HttpCode(200)
+  telegramStart(@Ip() ip: string) {
+    return this.auth.startTelegram(ip);
+  }
+
+  /** Bot tasdiqladimi? → pending yoki tokenlar */
+  @Post('telegram/check')
+  @HttpCode(200)
+  telegramCheck(@Body() dto: TelegramCheckDto) {
+    return this.auth.checkTelegram(dto);
+  }
+
   @Post('refresh')
   @HttpCode(200)
   refresh(@Body() dto: RefreshDto) {
@@ -252,6 +309,7 @@ export class AuthController {
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, TelegramGatewayService],
+  providers: [AuthService, TelegramGatewayService, TelegramBotService],
+  exports: [TelegramBotService],
 })
 export class AuthModule {}

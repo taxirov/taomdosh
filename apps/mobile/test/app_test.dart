@@ -32,11 +32,14 @@ Future<void> pumpApp(WidgetTester tester, http.Client client) async {
 }
 
 void main() {
-  testWidgets('kirmagan foydalanuvchi: xush kelibsiz → telefon', (tester) async {
+  testWidgets('kirmagan foydalanuvchi: xush kelibsiz → Telegram orqali kirish → telefon', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await pumpApp(tester, fakeApi({}));
     expect(find.text('Boshlash'), findsOneWidget);
     await tester.tap(find.text('Boshlash'));
+    await tester.pumpAndSettle();
+    expect(find.text('Telegram orqali kirish'), findsWidgets);
+    await tester.tap(find.text('Raqam va kod bilan kirish'));
     await tester.pumpAndSettle();
     expect(find.text('Keling, tanishamiz'), findsOneWidget);
     expect(find.text('Kod olish'), findsOneWidget);

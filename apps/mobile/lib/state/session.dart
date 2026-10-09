@@ -90,6 +90,21 @@ class Session extends ChangeNotifier {
   Future<bool> verify(String phone, String code, String name) async {
     final r =
         await api.post('/auth/verify', {'phone': phone, 'code': code, 'name': name, 'locale': locale, 'deviceName': 'android'}) as Json;
+    return completeLogin(r);
+  }
+
+  /// Telegram bot orqali kirish: bir martalik token va t.me havolasi
+  Future<Json> startTelegramLogin() async => await api.post('/auth/telegram/start') as Json;
+
+  /// Bot tasdiqlaganmi? Tasdiqlangan bo'lsa kiradi va isNewUser ni qaytaradi; aks holda null
+  Future<bool?> checkTelegramLogin(String token) async {
+    final r = await api.post('/auth/telegram/check', {'token': token, 'locale': locale, 'deviceName': 'android'}) as Json;
+    if (r['status'] != 'ok') return null;
+    return completeLogin(r);
+  }
+
+  /// Tokenlarni saqlash va profil, guruhlarni yuklash
+  Future<bool> completeLogin(Json r) async {
     await api.saveTokens(r['accessToken'] as String, r['refreshToken'] as String);
     await loadMe();
     await loadGroups();
