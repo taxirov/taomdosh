@@ -111,6 +111,8 @@ String errorText(Object e) {
     'admin_only' => t('Faqat guruh admini qila oladi'),
     'cook_or_admin_only' => t('Faqat navbatchi yoki admin qila oladi'),
     'invite_invalid' => t('Taklif kodi topilmadi'),
+    'login_expired' => t('Havola eskirdi — qaytadan bosing'),
+    'telegram_bot_disabled' => t('Telegram orqali kirish hozircha yoqilmagan. Raqam va kod bilan kiring.'),
     'last_admin' => t('Guruhda kamida bitta admin qolishi kerak'),
     'already_bought' => t('Bu mahsulot allaqachon olingan'),
     'payer_or_admin_only' => t('Faqat to‘lagan kishi yoki admin o‘chira oladi'),

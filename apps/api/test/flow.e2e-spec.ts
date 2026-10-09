@@ -13,10 +13,12 @@ import { AppModule } from '../src/app.module';
 import { DB, Db, REDIS } from '../src/common/infra.module';
 import { addDays, localDate, weekMonday } from '../src/domain/schedule';
 import { MealsService } from '../src/modules/meals/meals.module';
+import { TelegramBotService } from '../src/modules/auth/telegram-bot.service';
 
 process.env.AUTH_TEST_PHONES = '*';
 process.env.AUTH_TEST_CODE = '111111';
 process.env.MEAL_LOCK_POLLER = 'off';
+process.env.TELEGRAM_BOT_USERNAME = 'taomdosh_bot'; // token yo'q — polling yo'q, xabarlar yuborilmaydi
 
 interface Member {
   id: string;
@@ -58,6 +60,41 @@ describe('Taomdosh oqimi (e2e)', () => {
   afterAll(async () => {
     if (groupId) await db.execute(sql`delete from groups where id = ${groupId}`);
     await app.close();
+  });
+
+  it('Telegram bot orqali kirish (bepul): Start → raqam → tokenlar', async () => {
+    const bot = app.get(TelegramBotService);
+    const tgId = Math.floor(1e8 + Math.random() * 8e8);
+    const phoneDigits = `99893${Math.floor(1_000_000 + Math.random() * 8_999_999)}`;
+    const msg = (extra: object) => ({ update_id: 1, message: { chat: { id: tgId }, from: { id: tgId, first_name: 'Dilshod' }, ...extra } });
+
+    const start = await http().post('/v1/auth/telegram/start').expect(200);
+    expect(start.body.url).toBe(`https://t.me/taomdosh_bot?start=${start.body.token}`);
+    const check = () => http().post('/v1/auth/telegram/check').send({ token: start.body.token });
+    expect((await check().expect(200)).body).toEqual({ status: 'pending' });
+
+    await bot.handleUpdate(msg({ text: `/start ${start.body.token}` }));
+    expect((await check().expect(200)).body.status).toBe('pending'); // raqam hali yuborilmagan
+    // Boshqa odamning kontakti qabul qilinmaydi
+    await bot.handleUpdate(msg({ contact: { phone_number: '998900000000', user_id: tgId + 1 } }));
+    expect((await check().expect(200)).body.status).toBe('pending');
+    await bot.handleUpdate(msg({ contact: { phone_number: phoneDigits, user_id: tgId } }));
+
+    const ok = (await check().expect(200)).body;
+    expect(ok.status).toBe('ok');
+    expect(ok.isNewUser).toBe(true);
+    expect(ok.user.phone).toBe(`+${phoneDigits}`);
+    expect(ok.user.name).toBe('Dilshod');
+    await http().get('/v1/me').set('Authorization', `Bearer ${ok.accessToken}`).expect(200);
+    await check().expect(401); // token bir martalik
+
+    // Keyingi safar: raqam ma'lum — faqat Start
+    const again = await http().post('/v1/auth/telegram/start').expect(200);
+    await bot.handleUpdate(msg({ text: `/start ${again.body.token}` }));
+    const ok2 = (await http().post('/v1/auth/telegram/check').send({ token: again.body.token }).expect(200)).body;
+    expect(ok2.status).toBe('ok');
+    expect(ok2.isNewUser).toBe(false);
+    expect(ok2.user.id).toBe(ok.user.id);
   });
 
   it('kirish va profil', async () => {

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Taomdosh serverini bir buyruq bilan o'rnatish (Ubuntu, root sifatida):
-#   curl -fsSL https://raw.githubusercontent.com/taxirov/taomdosh/main/deploy/setup.sh | bash -s -- +998901234567,+998911112233
-# Argument — test raqamlari (vergul bilan): ular Telegram'siz doimiy kod bilan kiradi.
+#   curl -fsSL https://raw.githubusercontent.com/taxirov/taomdosh/main/deploy/setup.sh | BOT_TOKEN='123:ABC' bash -s -- +998901234567,+998911112233
+# BOT_TOKEN — @BotFather dagi bot tokeni (bepul "Telegram orqali kirish" uchun; ixtiyoriy, keyin ham qo'shsa bo'ladi).
+# Argument — test raqamlari (vergul bilan): ular bot'siz, doimiy kod bilan kiradi.
 # Qayta ishga tushirish xavfsiz: mavjud .env va ma'lumotlar saqlanadi, kod yangilanadi.
 set -euo pipefail
 
 TEST_PHONES="${1:-}"
+BOT_TOKEN="${BOT_TOKEN:-}"
 DIR=/opt/taomdosh
 
 echo "==> 1/6 Swap (kichik serverda yig'ish uchun)"
@@ -35,11 +37,20 @@ DOMAIN=${IP//./-}.sslip.io
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
 JWT_ACCESS_SECRET=$(openssl rand -hex 32)
 JWT_REFRESH_SECRET=$(openssl rand -hex 32)
+TELEGRAM_BOT_TOKEN=${BOT_TOKEN}
 TELEGRAM_GATEWAY_TOKEN=
 AUTH_TEST_PHONES=${TEST_PHONES}
 AUTH_TEST_CODE=$(shuf -i 100000-999999 -n 1)
 EOF
   chmod 600 .env
+fi
+# Mavjud .env ga keyinroq bot tokeni berilsa — yangilash
+if [ -n "$BOT_TOKEN" ]; then
+  if grep -q '^TELEGRAM_BOT_TOKEN=' .env; then
+    sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=${BOT_TOKEN}|" .env
+  else
+    echo "TELEGRAM_BOT_TOKEN=${BOT_TOKEN}" >> .env
+  fi
 fi
 
 echo "==> 6/6 Ishga tushirish (birinchi marta 5–15 daqiqa)"
@@ -64,3 +75,6 @@ else
 fi
 echo "Test raqamlari: $(grep '^AUTH_TEST_PHONES=' .env | cut -d= -f2)"
 echo "Test kodi:      $(grep '^AUTH_TEST_CODE=' .env | cut -d= -f2)"
+if grep -q '^TELEGRAM_BOT_TOKEN=.\+' .env; then
+  echo "Bot:            $(docker compose logs api 2>/dev/null | grep -o '@[A-Za-z0-9_]* ishga tushdi' | tail -1 || true)"
+fi

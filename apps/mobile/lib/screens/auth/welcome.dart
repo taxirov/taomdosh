@@ -5,7 +5,7 @@ import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
-import 'phone.dart';
+import 'telegram_login.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -53,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
                       style: sans(15, color: C.muted, height: 1.5),
                     ),
                     const SizedBox(height: 28),
-                    PrimaryButton(label: t('Boshlash'), onPressed: () => Navigator.of(context).push(route(const PhoneScreen()))),
+                    PrimaryButton(label: t('Boshlash'), onPressed: () => Navigator.of(context).push(route(const TelegramLoginScreen()))),
                     const SizedBox(height: 16),
                     Wrap(
                       alignment: WrapAlignment.center,

@@ -12,6 +12,7 @@ flutter run                                   # emulyator: API http://10.0.2.2:3
 flutter run --dart-define=API_URL=http://192.168.1.10:3000/v1   # haqiqiy telefon, bir Wi-Fi tarmog'ida
 ```
 
+Kirish: "Telegram orqali kirish" (@taomdosh_bot, bepul) yoki "Raqam va kod bilan kirish" (test raqamlari).
 Lokal API uchun `apps/api/.env` da `AUTH_TEST_PHONES=*` qo'ying — har qanday raqamga kod `111111`.
 
 Tekshiruvlar: `flutter analyze`, `flutter test` (tarjima to'liqligi, formatlash, asosiy ekranlar soxta API bilan).

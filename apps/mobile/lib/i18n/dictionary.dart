@@ -2,6 +2,19 @@
 library;
 
 const ru = <String, String>{
+  'Havola eskirdi — qaytadan bosing': 'Ссылка устарела — нажмите ещё раз',
+  'Telegram orqali kirish hozircha yoqilmagan. Raqam va kod bilan kiring.':
+      'Вход через Telegram пока не включён. Войдите по номеру и коду.',
+  'Telegram ochilmadi. Telegram o‘rnatilganini tekshiring.': 'Не удалось открыть Telegram. Проверьте, что он установлен.',
+  'Telegram orqali kirish': 'Войти через Telegram',
+  'Parol va SMS kerak emas — raqamingizni Telegram tasdiqlaydi. Bepul.': 'Без пароля и SMS — номер подтвердит Telegram. Бесплатно.',
+  'Pastdagi tugmani bosing — Telegram’da @taomdosh_bot ochiladi.': 'Нажмите кнопку ниже — в Telegram откроется @taomdosh_bot.',
+  '“Start”, so‘ng “Raqamni yuborish” tugmasini bosing.': 'Нажмите «Start», затем «Отправить номер».',
+  'Ilovaga qayting — kirish avtomatik bo‘ladi.': 'Вернитесь в приложение — вход произойдёт автоматически.',
+  'Telegram’dagi tasdiqni kutyapmiz…': 'Ждём подтверждения в Telegram…',
+  'Botda “Raqamni yuborish” tugmasini bosgach, shu yerga qayting.': 'После нажатия «Отправить номер» в боте вернитесь сюда.',
+  'Telegram’ni qayta ochish': 'Открыть Telegram снова',
+  'Raqam va kod bilan kirish': 'Войти по номеру и коду',
   'so‘m': 'сум',
   'dona': 'шт.',
   'osh q.': 'ст. л.',
@@ -449,6 +462,19 @@ const ru = <String, String>{
 };
 
 const en = <String, String>{
+  'Havola eskirdi — qaytadan bosing': 'The link expired — tap again',
+  'Telegram orqali kirish hozircha yoqilmagan. Raqam va kod bilan kiring.':
+      'Telegram sign-in isn\'t enabled yet. Sign in with your number and code.',
+  'Telegram ochilmadi. Telegram o‘rnatilganini tekshiring.': 'Couldn\'t open Telegram. Check that it\'s installed.',
+  'Telegram orqali kirish': 'Sign in with Telegram',
+  'Parol va SMS kerak emas — raqamingizni Telegram tasdiqlaydi. Bepul.': 'No password or SMS — Telegram confirms your number. Free.',
+  'Pastdagi tugmani bosing — Telegram’da @taomdosh_bot ochiladi.': 'Tap the button below — @taomdosh_bot opens in Telegram.',
+  '“Start”, so‘ng “Raqamni yuborish” tugmasini bosing.': 'Tap “Start”, then “Send number”.',
+  'Ilovaga qayting — kirish avtomatik bo‘ladi.': 'Come back to the app — you\'ll be signed in automatically.',
+  'Telegram’dagi tasdiqni kutyapmiz…': 'Waiting for confirmation in Telegram…',
+  'Botda “Raqamni yuborish” tugmasini bosgach, shu yerga qayting.': 'After tapping “Send number” in the bot, come back here.',
+  'Telegram’ni qayta ochish': 'Open Telegram again',
+  'Raqam va kod bilan kirish': 'Sign in with number and code',
   'so‘m': 'sum',
   'dona': 'pcs',
   'osh q.': 'tbsp',
