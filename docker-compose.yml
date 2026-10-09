@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      # Kichik serverda (512 MB) Node xotirasini cheklash
+      NODE_OPTIONS: --max-old-space-size=192
       PORT: 3000
       DATABASE_URL: postgresql://taomdosh:${POSTGRES_PASSWORD:?}@postgres:5432/taomdosh
       REDIS_URL: redis://redis:6379
@@ -27,6 +29,8 @@ services:
       POSTGRES_USER: taomdosh
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: taomdosh
+    # Kichik serverga mos xotira sozlamalari
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=30", "-c", "work_mem=2MB"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U taomdosh"]
@@ -37,7 +41,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "32mb", "--maxmemory-policy", "allkeys-lru"]
     volumes: [redisdata:/data]
 
   caddy:
@@ -46,7 +50,6 @@ services:
     ports: ["80:80", "443:443", "443:443/udp"]
     environment:
       DOMAIN: ${DOMAIN:?}
-      ACME_EMAIL: ${ACME_EMAIL:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data
