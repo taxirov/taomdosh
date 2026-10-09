@@ -141,6 +141,8 @@ describe('Taomdosh oqimi (e2e)', () => {
       .send({ from: nextMonday, to: nextMonday })
       .expect(201);
     const pasta = before.body.find((x: { ingredientId: string }) => x.ingredientId === pastaId);
+    // Suv retseptda bor, lekin xarid ro'yxatiga tushmaydi
+    expect(before.body.some((x: { name: string }) => x.name === 'Suv')).toBe(false);
     expect(pasta).toBeDefined();
     expect(pasta.status).toBe('pending');
 

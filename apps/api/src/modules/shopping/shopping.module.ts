@@ -38,6 +38,8 @@ import { mealNeeds, planPortions } from '../meals/portion-planner';
 
 /** Standart xarid davri — bugundan 7 kun */
 export const DEFAULT_PERIOD_DAYS = 7;
+/** Sotib olinmaydigan masalliqlar (retseptda bor, xarid ro'yxatiga tushmaydi) */
+export const NOT_SHOPPED = ['water'];
 
 // ───────────────────── DTO ─────────────────────
 
@@ -99,6 +101,11 @@ export class ShoppingService {
       .where(and(eq(pantryItems.groupId, groupId), inArray(pantryItems.ingredientId, [...need.keys()])));
     for (const s of stock) need.set(s.ingredientId, (need.get(s.ingredientId) ?? 0) - s.qtyG);
     for (const [k, v] of need) if (v <= 0) need.delete(k);
+    const skip = await this.db
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(inArray(ingredients.slug, NOT_SHOPPED));
+    for (const r of skip) need.delete(r.id);
     return need;
   }
 
