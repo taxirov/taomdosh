@@ -1,7 +1,5 @@
-{
-	email {$ACME_EMAIL}
-}
-
+# DOMAIN — o'z domeningiz yoki domen bo'lmasa <IP-chiziqcha bilan>.sslip.io (masalan 164-92-1-2.sslip.io).
+# Sertifikat (Let's Encrypt) avtomatik olinadi; email shart emas.
 {$DOMAIN} {
 	encode gzip zstd
 	reverse_proxy api:3000

@@ -1,5 +1,20 @@
 # DigitalOcean'ga joylash
 
+## Tez yo'l: bitta buyruq
+
+Ubuntu Droplet (hatto $4 / 512 MB) ochib, **Access → Launch Droplet Console** orqali root sifatida:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/taxirov/taomdosh/main/deploy/setup.sh | bash -s -- +998901234567,+998911112233
+```
+
+Argument — test raqamlari (vergul bilan, bo'sh joysiz): ular Telegram tokenisiz doimiy kod bilan kiradi.
+Skript swap, xavfsizlik devori, Docker, kod, `.env` (tasodifiy parollar bilan), ishga tushirish va seed'ni bajaradi.
+Domen bo'lmasa manzil `https://<IP-chiziqcha>.sslip.io/v1` bo'ladi. Oxirida API manzili va test kodi chiqadi.
+Yangilash uchun xuddi shu buyruqni qayta ishga tushiring (`.env` va ma'lumotlar saqlanadi).
+
+Quyida — qo'lda, batafsil yo'l.
+
 MVP serveri: **DigitalOcean Droplet** (Frankfurt, 2 GB RAM, Ubuntu 24.04), Docker Compose bilan
 `api` + `postgres` + `redis` + `caddy` (avtomatik HTTPS, Let's Encrypt).
 Hech narsa DigitalOcean'ga bog'lanmagan — ommaga chiqishdan oldin UzCloud (yoki istalgan Docker serveri)ga
@@ -36,7 +51,7 @@ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 su - deploy
 git clone https://github.com/taxirov/taomdosh.git && cd taomdosh
 cp deploy/.env.example .env
-nano .env        # DOMAIN, ACME_EMAIL, parollar (openssl rand -hex 32), TELEGRAM_GATEWAY_TOKEN
+nano .env        # DOMAIN, parollar (openssl rand -hex 32), TELEGRAM_GATEWAY_TOKEN
 
 docker compose up -d --build
 docker compose logs -f api                      # "Migratsiyalar qo'llandi" → server ishga tushdi
