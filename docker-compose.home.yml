@@ -1,8 +1,14 @@
 # Uy serveri (laptop) rejimi: HTTPS ni tunnel (jprq) beradi, Caddy kerak emas.
 # deploy/setup.sh MODE=jprq bilan .env ga COMPOSE_FILE=docker-compose.yml:docker-compose.home.yml yozadi.
+# Barcha konteynerlar taomdosh.slice ichida — CPU/RAM chegarasi umumiy (setup.sh: LIMIT_CPU, LIMIT_RAM).
 services:
   api:
     # Faqat shu kompyuterning o'zidan (tunnel mijozi uchun), tarmoqqa ochilmaydi
     ports: ["127.0.0.1:3000:3000"]
+    cgroup_parent: taomdosh.slice
+  postgres:
+    cgroup_parent: taomdosh.slice
+  redis:
+    cgroup_parent: taomdosh.slice
   caddy:
     profiles: [disabled]

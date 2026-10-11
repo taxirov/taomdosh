@@ -10,7 +10,7 @@ To'liq dizayn: claude.ai dagi "Taomdosh — System design va Database dizayn" hu
 ## Qabul qilingan qarorlar (MVP)
 - Faqat **Android** (APK Telegram orqali yaqinlarga tarqatiladi), Flutter.
 - Backend: NestJS 11 + PostgreSQL 16 + Redis, ORM — **Drizzle** (Prisma ishlatilmaydi: dvigatel binarlari bulut muhitida yuklanmaydi).
-- Server: **DigitalOcean** Droplet (Frankfurt, 2 GB), Docker Compose. Ommaga chiqishdan oldin UzCloud ga ko'chiriladi (ma'lumot lokalizatsiyasi) — kod hostingga bog'lanmagan bo'lsin.
+- Server: **DigitalOcean** Droplet yoki uy laptopi + jprq.io tunneli (`deploy/setup.sh` `MODE=jprq`, `docker-compose.home.yml`), Docker Compose; API obrazi `ghcr.io/taxirov/taomdosh-api`. Ommaga chiqishdan oldin UzCloud ga ko'chiriladi (ma'lumot lokalizatsiyasi) — kod hostingga bog'lanmagan bo'lsin.
 - Kirish: asosiy yo'l — **@taomdosh_bot** orqali bepul (`/auth/telegram/start` → botda Start + "Raqamni yuborish" → `/auth/telegram/check`; `auth/telegram-bot.service.ts`, long polling, `TELEGRAM_BOT_TOKEN`). Zaxira: telefon + Telegram Gateway kodi (pullik, ixtiyoriy). `AUTH_TEST_PHONES` dagi raqamlar uchun doimiy `AUTH_TEST_CODE`.
 - MVP doirasi: kirish, profil (kaloriya), guruh, katalog, haftalik reja, qatnashuv ("yeyman/yemayman", mehmon), qulflash va porsiyalar, navbatchilik, xarid ro'yxati + zaxira, xarajat va qarzlar.
 - Keyingi bosqich: oshpazlar, pullik retsept/kurs, to'lovlar, stories, push (FCM), real vaqt (WebSocket).
