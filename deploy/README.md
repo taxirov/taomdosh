@@ -13,6 +13,28 @@ Skript swap, xavfsizlik devori, Docker, kod, `.env` (tasodifiy parollar bilan), 
 Domen bo'lmasa manzil `https://<IP-chiziqcha>.sslip.io/v1` bo'ladi. Oxirida API manzili va test kodi chiqadi.
 Yangilash uchun xuddi shu buyruqni qayta ishga tushiring (`.env` va ma'lumotlar saqlanadi).
 
+## Uy serveri: laptop + jprq.io
+
+Oq IP va ochiq port kerak emas — uy Wi-Fi yetadi. HTTPS manzilni [jprq.io](https://jprq.io) tunneli beradi
+(a'zolik kerak; token: https://jprq.io/auth).
+
+1. Laptopga **Ubuntu Server 24.04** o'rnating (grafik interfeyssiz — kuchsiz protsessorda yengil), o'rnatishda Wi-Fi'ni ulang.
+2. Laptopda:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/taxirov/taomdosh/main/deploy/setup.sh | sudo MODE=jprq JPRQ_TOKEN='...' JPRQ_NAME=taomdosh BOT_TOKEN='...' bash -s -- +998901234567
+   ```
+3. Oxirida `TAYYOR. API manzili: https://taomdosh.<jprq domeni>/v1` chiqadi.
+
+Skript qo'shimcha ravishda:
+- qopqoq yopilganda uxlashni o'chiradi;
+- loyihaga **1,5 CPU / 4 GB RAM / 100 GB disk** ajratadi (`LIMIT_CPU`, `LIMIT_RAM`, `LIMIT_DISK` bilan o'zgartiriladi;
+  disk — `/var/lib/docker.img`, faqat Docker hali ishlatilmagan bo'lsa);
+- tunnelni `taomdosh-jprq` xizmati qiladi (qayta yonganda o'zi ulanadi): `systemctl status taomdosh-jprq`;
+- har kecha baza nusxasini `/opt/taomdosh-backups` ga oladi.
+
+API obrazi GitHub Actions'da yig'ilib `ghcr.io/taxirov/taomdosh-api` ga qo'yiladi — server uni yuklab oladi
+(obraz yopiq bo'lsa, skript o'zi yig'adi; tezlik uchun GitHub → Packages → taomdosh-api → visibility: **Public**).
+
 Quyida — qo'lda, batafsil yo'l.
 
 MVP serveri: **DigitalOcean Droplet** (Frankfurt, 2 GB RAM, Ubuntu 24.04), Docker Compose bilan

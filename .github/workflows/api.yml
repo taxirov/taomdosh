@@ -49,3 +49,30 @@ jobs:
       - run: npm run db:seed
       - run: npm run test:e2e
       - run: npm run build
+
+  # main dagi har o'zgarishda tayyor obraz → ghcr.io (serverlar uni yig'may, yuklab oladi)
+  image:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-api:latest
+            ghcr.io/${{ github.repository }}-api:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}

@@ -2,6 +2,8 @@
 # Sozlamalar: deploy/.env.example → .env (shu papkada). Yo'riqnoma: deploy/README.md
 services:
   api:
+    # API_IMAGE berilsa — tayyor obraz yuklanadi (ghcr.io), aks holda shu yerda yig'iladi
+    image: ${API_IMAGE:-taomdosh-api}
     build: ./apps/api
     restart: unless-stopped
     environment:
