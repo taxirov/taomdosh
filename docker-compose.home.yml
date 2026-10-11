@@ -1,0 +1,8 @@
+# Uy serveri (laptop) rejimi: HTTPS ni tunnel (jprq) beradi, Caddy kerak emas.
+# deploy/setup.sh MODE=jprq bilan .env ga COMPOSE_FILE=docker-compose.yml:docker-compose.home.yml yozadi.
+services:
+  api:
+    # Faqat shu kompyuterning o'zidan (tunnel mijozi uchun), tarmoqqa ochilmaydi
+    ports: ["127.0.0.1:3000:3000"]
+  caddy:
+    profiles: [disabled]
