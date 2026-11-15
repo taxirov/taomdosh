@@ -5,7 +5,7 @@
 import 'dotenv/config';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import ExcelJS from 'exceljs';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -13,6 +13,7 @@ import { DB, Db } from '../src/common/infra.module';
 import { ingredients, priceSnapshots, priceSyncRuns } from '../src/db/schema';
 import { PRICE_SOURCE, parseApiResponse, PriceItem, PriceSource } from '../src/modules/prices/price-source';
 import { PricesService } from '../src/modules/prices/prices.module';
+import { addDays, localDate, weekMonday } from '../src/domain/schedule';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fixture = require('./fixtures/prices-api.json');
 
@@ -137,6 +138,57 @@ describe('Narxlar (e2e)', () => {
     // boshqa guruh a'zosi ko'ra olmaydi
     const other = await login('Begona');
     await http().get(`/v1/groups/${g.body.id}/prices`).set(other.auth).expect(404);
+  });
+
+  it('xarid ro‘yxatida taxminiy narx, jami summa va haftalik reja xarajati', async () => {
+    const u = await login('Xaridor');
+    const g = await http().post('/v1/groups').set(u.auth).send({ name: 'Xarid guruhi', type: 'students' }).expect(201);
+    const gid = g.body.id as string;
+    const cbs = await http().get('/v1/cookbooks').set(u.auth).expect(200);
+    const cb = cbs.body.find((x: { slug: string }) => x.slug === 'talaba_hamyoni');
+    const monday = addDays(weekMonday(localDate(new Date(), 'Asia/Tashkent')), 7);
+    const plan = await http().post(`/v1/groups/${gid}/plans`).set(u.auth).send({ cookbookId: cb.id, weekStart: monday }).expect(201);
+
+    type Row = { ingredientId: string; name: string; qtyG: number; estCost: number | null; priceSource: string | null; unitPrice: object | null };
+    const list = await http().post(`/v1/groups/${gid}/shopping/regenerate`).set(u.auth).send({ from: monday, to: addDays(monday, 6) }).expect(201);
+    const rows = list.body as Row[];
+    const priced = rows.filter((r) => r.estCost !== null);
+    const unpriced = rows.filter((r) => r.estCost === null);
+    expect(priced.length).toBeGreaterThan(5);
+    expect(unpriced.length).toBeGreaterThan(0);
+    expect(priced.every((r) => r.priceSource === 'market' && r.estCost! > 0 && r.estCost! % 100 === 0)).toBe(true);
+    expect(unpriced.every((r) => r.priceSource === null && r.unitPrice === null)).toBe(true);
+
+    const est = await http().get(`/v1/groups/${gid}/shopping/estimate`).set(u.auth).expect(200);
+    expect(est.body.asOf).toBe(DAY2);
+    expect(est.body.total).toBe(priced.reduce((s, r) => s + r.estCost!, 0));
+    expect(est.body.itemsCount).toBe(rows.length);
+    expect(est.body.missing).toHaveLength(unpriced.length);
+
+    // Narxi topilmagan masalliqqa guruh o'z narxini kiritadi — keyingi safar shu ishlatiladi
+    const m = unpriced[0];
+    await http().put(`/v1/groups/${gid}/prices/${m.ingredientId}`).set(u.auth).send({ price: 50000 }).expect(200);
+    const again = (await http().get(`/v1/groups/${gid}/shopping`).set(u.auth).expect(200)).body as Row[];
+    const row = again.find((r) => r.ingredientId === m.ingredientId)!;
+    expect(row.priceSource).toBe('group');
+    expect(row.estCost).toBe(Math.round((m.qtyG * 50) / 100) * 100);
+    const est2 = await http().get(`/v1/groups/${gid}/shopping/estimate`).set(u.auth).expect(200);
+    expect(est2.body.missing).toHaveLength(unpriced.length - 1);
+    expect(est2.body.total).toBe(est.body.total + row.estCost!);
+
+    // Haftalik reja: guruh va bir kishi hisobiga
+    const pe = await http().get(`/v1/groups/${gid}/plans/${plan.body.plan.id}/estimate`).set(u.auth).expect(200);
+    expect(pe.body).toMatchObject({ mealsCount: 21, people: 1, asOf: DAY2, weekStart: monday });
+    expect(pe.body.total).toBeGreaterThan(0);
+    expect(pe.body.perPerson).toBe(pe.body.total);
+    const friend = await login('Sherik');
+    await http().post('/v1/groups/join').set(friend.auth).send({ inviteCode: g.body.inviteCode });
+    const pe2 = await http().get(`/v1/groups/${gid}/plans/${plan.body.plan.id}/estimate`).set(friend.auth).expect(200);
+    expect(pe2.body.people).toBe(2);
+    expect(pe2.body.total).toBeGreaterThan(pe.body.total);
+    expect(pe2.body.perPerson).toBeLessThan(pe2.body.total);
+    await http().get(`/v1/groups/${gid}/plans/${gid}/estimate`).set(u.auth).expect(404);
+    await db.execute(sql`delete from groups where id = ${gid}`);
   });
 
   it('admin Excel faylni yuklaydi; oddiy foydalanuvchiga taqiq', async () => {

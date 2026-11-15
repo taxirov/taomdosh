@@ -12,6 +12,7 @@ import 'expenses.dart';
 import 'group_actions.dart';
 import 'no_group.dart';
 import 'pantry.dart';
+import 'plan_cost.dart';
 import 'shopping.dart';
 
 /// Guruh: tur, a'zolar, taklif kodi, bo'limlarga havolalar
@@ -240,6 +241,7 @@ class _GroupScreenState extends State<GroupScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            PlanCostCard(key: ValueKey('cost-${g['id']}')),
             CardList(
               children: [
                 link(Icons.event_repeat_rounded, t('Navbatchilik'), const DutyScreen()),

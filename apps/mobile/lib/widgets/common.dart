@@ -189,12 +189,14 @@ class AppCard extends StatelessWidget {
 
 /// Kartochka ichida ajratgich chiziqli qatorlar
 class CardList extends StatelessWidget {
-  const CardList({super.key, required this.children});
+  const CardList({super.key, required this.children, this.radius = 18});
   final List<Widget> children;
+  final double radius;
 
   @override
   Widget build(BuildContext context) => AppCard(
     padding: EdgeInsets.zero,
+    radius: radius,
     child: Column(
       children: [
         for (var i = 0; i < children.length; i++) ...[if (i > 0) const Divider(height: 1, thickness: 1, color: C.lineSoft), children[i]],
@@ -488,19 +490,34 @@ class ErrorView extends StatelessWidget {
   );
 }
 
+/// Bo'sh holat: rasm (ikonka doirasi) + sarlavha + tushuntirish + harakat tugmasi
 class EmptyView extends StatelessWidget {
-  const EmptyView({super.key, required this.text, this.icon = Icons.inbox_outlined, this.action});
+  const EmptyView({super.key, required this.text, this.title, this.icon = Icons.inbox_outlined, this.action});
   final String text;
+  final String? title;
   final IconData icon;
   final Widget? action;
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
     child: Column(
       children: [
-        Icon(icon, size: 40, color: C.border),
-        const SizedBox(height: 10),
+        Container(
+          width: 72,
+          height: 72,
+          decoration: const BoxDecoration(color: C.lineSoft, shape: BoxShape.circle),
+          child: Icon(icon, size: 34, color: C.mustardInk),
+        ),
+        const SizedBox(height: 14),
+        if (title != null) ...[
+          Text(
+            title!,
+            textAlign: TextAlign.center,
+            style: sans(16, weight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+        ],
         Text(
           text,
           textAlign: TextAlign.center,
@@ -655,3 +672,154 @@ Future<bool> confirm(BuildContext context, String text, {String? ok}) async =>
     false;
 
 Route<T> route<T>(Widget page) => MaterialPageRoute<T>(builder: (_) => page);
+
+/// Bo'lim yorlig'i: kichik, bosh harflar bilan (xarid kategoriyalari, ro'yxat bo'limlari)
+class SectionLabel extends StatelessWidget {
+  const SectionLabel(this.text, {super.key});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Text(
+      text.toUpperCase(),
+      style: sans(12, weight: FontWeight.w800, color: C.muted).copyWith(letterSpacing: .7),
+    ),
+  );
+}
+
+/// "Olindi" belgisi: 48 px bosiladigan joy, yengil animatsiya bilan
+class CheckMark extends StatelessWidget {
+  const CheckMark({super.key, required this.checked, required this.onTap, this.label});
+  final bool checked;
+  final VoidCallback? onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    checked: checked,
+    label: label,
+    button: onTap != null,
+    child: InkResponse(
+      onTap: onTap,
+      radius: 24,
+      child: SizedBox.square(
+        dimension: 48,
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: checked ? C.olive : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: checked ? C.olive : C.border, width: 1.5),
+            ),
+            child: AnimatedScale(
+              scale: checked ? 1 : 0,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutBack,
+              child: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Internet yo'q — oxirgi saqlangan ma'lumot ko'rsatilayotgani belgisi
+class OfflineBadge extends StatelessWidget {
+  const OfflineBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(color: C.lineSoft, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 15, color: C.muted),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              t('Oflayn — oxirgi saqlangan ma’lumot'),
+              style: sans(12, weight: FontWeight.w700, color: C.muted),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Yuklanayotgan joy o'rnida miltillab turuvchi blok
+class Skeleton extends StatefulWidget {
+  const Skeleton({super.key, this.width, this.height = 16, this.radius = 8});
+  final double? width;
+  final double height;
+  final double radius;
+
+  @override
+  State<Skeleton> createState() => _SkeletonState();
+}
+
+class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: Tween<double>(begin: .45, end: 1).animate(_c),
+    child: Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(color: C.lineSoft, borderRadius: BorderRadius.circular(widget.radius)),
+    ),
+  );
+}
+
+/// Ro'yxat skeleti: kartochka ichida bir nechta qator
+class SkeletonList extends StatelessWidget {
+  const SkeletonList({super.key, this.rows = 4, this.leading = true});
+  final int rows;
+  final bool leading;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: t('Yuklanmoqda'),
+    child: Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: CardList(
+        children: [
+          for (var i = 0; i < rows; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Row(
+                children: [
+                  if (leading) ...[const Skeleton(width: 28, height: 28, radius: 14), const SizedBox(width: 12)],
+                  Expanded(
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: i.isEven ? .7 : .5,
+                      child: const Skeleton(height: 14),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Skeleton(width: 44, height: 14),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}

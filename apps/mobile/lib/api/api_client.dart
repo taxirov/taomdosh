@@ -29,6 +29,9 @@ class ApiClient {
   String locale = 'uz';
   Completer<bool>? _refreshing;
 
+  /// Oxirgi GET javobi keshdan (oflayn) olinganmi
+  bool lastFromCache = false;
+
   /// Sessiya tugaganda (refresh ham yaroqsiz) chaqiriladi
   void Function()? onLoggedOut;
 
