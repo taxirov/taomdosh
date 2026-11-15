@@ -2,7 +2,7 @@ import { Body, Controller, Get, Injectable, Module, Patch, Put } from '@nestjs/c
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsDateString, IsIn, IsInt, IsNumber, IsOptional, IsString, Length, Max, Min } from 'class-validator';
 import { desc, eq, inArray } from 'drizzle-orm';
-import { AuthUser, CurrentUser } from '../../common/auth';
+import { AuthUser, CurrentUser, isPlatformAdmin } from '../../common/auth';
 import { Db, InjectDb } from '../../common/infra.module';
 import { activityLevel, bodyMeasurements, goalEnum, nutritionTargets, sexEnum, userProfiles, users } from '../../db/schema';
 import type { ActivityLevel, Goal, Sex } from '../../db/schema';
@@ -31,7 +31,8 @@ export class UsersService {
   async me(userId: string) {
     const user = await this.db.query.users.findFirst({ where: eq(users.id, userId), with: { profile: true } });
     const target = await this.currentTarget(userId);
-    return { ...user, target };
+    // isAdmin — platforma admini (moderatsiya ekrani uchun)
+    return { ...user, isAdmin: isPlatformAdmin(user), target };
   }
 
   async updateMe(userId: string, dto: UpdateMeDto) {

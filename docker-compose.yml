@@ -24,6 +24,9 @@ services:
       # Kunlik narxlar (08:00, Asia/Tashkent); "off" — o'chirish
       PRICES_SYNC_ENABLED: ${PRICES_SYNC_ENABLED:-on}
       ADMIN_PHONES: ${ADMIN_PHONES:-}
+      UPLOADS_DIR: /data/uploads
+    # Taom rasmlari diskda saqlanadi (konteyner yangilanganda yo'qolmasligi uchun volume)
+    volumes: [uploads:/data/uploads]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_started }
@@ -64,6 +67,7 @@ services:
 
 volumes:
   pgdata:
+  uploads:
   redisdata:
   caddydata:
   caddyconfig:

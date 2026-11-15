@@ -33,7 +33,8 @@ npm run test:e2e              # to'liq oqim (Postgres, Redis va seed kerak)
 | Kirish | `POST /auth/request-code`, `/auth/verify`, `/auth/refresh`, `/auth/logout` |
 | Profil | `GET/PATCH /me`, `PUT /me/profile`, `GET /me/measurements` |
 | Guruh | `POST/GET /groups`, `POST /groups/join`, `GET/PATCH /groups/:id`, a'zolar, `PUT /groups/:id/meal-settings`, navbatchilik `/groups/:id/duty…` |
-| Katalog | `GET /ingredients`, `GET/POST /dishes`, `/dishes/:id/favorite`, `GET/POST /cookbooks` |
+| Katalog | `GET /ingredients`, `GET/POST /dishes`, `PATCH/DELETE /dishes/:id`, `POST/DELETE /dishes/:id/image` (rasm → `/v1/uploads/…`), `/dishes/:id/favorite`, `GET/POST /cookbooks`, `PATCH/DELETE /cookbooks/:id` |
+| Moderatsiya (admin) | `GET /admin/moderation`, `POST /admin/moderation/{dishes\|cookbooks}/:id/{approve\|reject}` |
 | Reja va mahallar | `POST/GET /groups/:id/plans`, `DELETE /groups/:id/plans/:planId`, `GET /groups/:id/meals?from&to`, `GET /meals/:id`, `PUT /meals/:id/attendance`, `POST /meals/:id/lock`, `GET /meals/:id/cook-view`, `POST /meals/:id/feedback` |
 | Xarid va zaxira | `POST /groups/:id/shopping/regenerate`, `GET/POST /groups/:id/shopping`, `PATCH/DELETE /groups/:id/shopping/:itemId`, `GET /groups/:id/pantry`, `PUT /groups/:id/pantry/:ingredientId`, `GET /groups/:id/pantry/movements` |
 | Xarajat | `POST/GET /groups/:id/expenses`, `POST …/expenses/:expenseId/recalculate`, `DELETE …/expenses/:expenseId`, `GET /groups/:id/balances`, `POST/GET /groups/:id/settlements` |

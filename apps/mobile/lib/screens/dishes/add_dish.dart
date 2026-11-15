@@ -7,12 +7,16 @@ import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/image_pick.dart';
 import 'ingredient_picker.dart';
 
 /// Guruh taomi: darhol guruhda ishlaydi; "Hammaga ochiq" — moderatsiyadan keyin katalogda.
 /// Kaloriya masalliqlardan serverda avtomatik hisoblanadi.
+///
+/// `dish` berilsa — tahrirlash rejimi (GET /dishes/:id javobi), saqlash PATCH bilan.
 class AddDishScreen extends StatefulWidget {
-  const AddDishScreen({super.key});
+  const AddDishScreen({super.key, this.dish});
+  final Json? dish;
 
   @override
   State<AddDishScreen> createState() => _AddDishScreenState();
@@ -32,6 +36,42 @@ class _AddDishScreenState extends State<AddDishScreen> {
   final List<Json> _ings = []; // {ingredientId, name, qtyG}
   final List<TextEditingController> _steps = [TextEditingController()];
   bool _busy = false;
+  Uint8List? _photo; // yangi tanlangan rasm (saqlashda yuklanadi)
+
+  bool get _editing => widget.dish != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final d = widget.dish;
+    if (d == null) return;
+    _title.text = d['title'] ?? '';
+    _desc.text = d['description'] ?? '';
+    _active.text = '${d['activeMin']}';
+    _passive.text = '${d['passiveMin']}';
+    _video.text = d['videoUrl'] ?? '';
+    _servings = (d['baseServings'] as num).toInt();
+    _prep = (d['prepAheadMin'] as num) > 0;
+    _side = d['isSide'] == true;
+    _public = d['visibility'] == 'public' || d['moderationStatus'] == 'pending';
+    _types
+      ..clear()
+      ..addAll(((d['mealTypes'] as List?) ?? []).cast<String>());
+    _ings.addAll([
+      for (final i in (d['ingredients'] as List).cast<Json>()) {'ingredientId': i['ingredientId'], 'name': i['name'], 'qtyG': i['qtyG']},
+    ]);
+    final steps = (d['steps'] as List).cast<Json>();
+    if (steps.isNotEmpty) {
+      _steps
+        ..clear()
+        ..addAll([for (final st in steps) TextEditingController(text: st['text'] ?? '')]);
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final bytes = await pickDishPhoto(context);
+    if (bytes != null && mounted) setState(() => _photo = bytes);
+  }
 
   Future<void> _addIngredient() async {
     final picked = await pickIngredient(context);
@@ -55,24 +95,32 @@ class _AddDishScreenState extends State<AddDishScreen> {
     final active = int.tryParse(_active.text) ?? 0;
     if (active < 1) return showSnack(context, t('Faol vaqtni kiriting'));
     setState(() => _busy = true);
-    final ok = await guard(
-      context,
-      () => s.api.post('/dishes', {
-        'title': _title.text.trim(),
-        if (_desc.text.trim().isNotEmpty) 'description': _desc.text.trim(),
-        'groupId': s.groupId,
-        'submitPublic': _public,
-        'activeMin': active,
-        'passiveMin': int.tryParse(_passive.text) ?? 0,
-        'prepAheadMin': _prep ? 480 : 0,
-        'baseServings': _servings,
-        'isSide': _side,
-        'mealTypes': _types.toList(),
-        'ingredients': _ings.map((i) => {'ingredientId': i['ingredientId'], 'qtyG': i['qtyG']}).toList(),
-        'steps': steps,
-        if (_video.text.trim().isNotEmpty) 'videoUrl': _video.text.trim(),
-      }),
-    );
+    final body = {
+      'title': _title.text.trim(),
+      'description': _desc.text.trim(),
+      'submitPublic': _public,
+      'activeMin': active,
+      'passiveMin': int.tryParse(_passive.text) ?? 0,
+      'prepAheadMin': _prep ? 480 : 0,
+      'baseServings': _servings,
+      'isSide': _side,
+      'mealTypes': _types.toList(),
+      'ingredients': _ings.map((i) => {'ingredientId': i['ingredientId'], 'qtyG': i['qtyG']}).toList(),
+      'steps': steps,
+      'videoUrl': _video.text.trim(),
+    };
+    final ok = await guard(context, () async {
+      final Json saved;
+      if (_editing) {
+        saved = await s.api.patch('/dishes/${widget.dish!['id']}', body) as Json;
+      } else {
+        if ((body['videoUrl'] as String).isEmpty) body.remove('videoUrl');
+        if ((body['description'] as String).isEmpty) body.remove('description');
+        saved = await s.api.post('/dishes', {...body, 'groupId': s.groupId}) as Json;
+      }
+      // Taom saqlangach rasm alohida yuklanadi (serverda siqiladi)
+      if (_photo != null) await s.api.upload('/dishes/${saved['id']}/image', _photo!, filename: 'dish.jpg');
+    });
     if (!mounted) return;
     setState(() => _busy = false);
     if (ok) Navigator.pop(context, true);
@@ -107,7 +155,53 @@ class _AddDishScreenState extends State<AddDishScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               children: [
-                ScreenHeader(title: t('Taom qo‘shish'), close: true, big: false),
+                ScreenHeader(title: _editing ? t('Taomni tahrirlash') : t('Taom qo‘shish'), close: true, big: false),
+                const SizedBox(height: 16),
+                // Rasm: kamera yoki galereyadan
+                Semantics(
+                  button: true,
+                  label: t('Rasm qo‘shish'),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: _pickPhoto,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: SizedBox(
+                        height: 170,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            if (_photo != null)
+                              Image.memory(_photo!, fit: BoxFit.cover)
+                            else
+                              DishImage(url: widget.dish?['imageUrl'], radius: 0, seed: widget.dish?['id'] ?? 'new'),
+                            Positioned(
+                              right: 12,
+                              bottom: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(14)),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.photo_camera_outlined, size: 18, color: C.ink),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _photo != null || (widget.dish?['imageUrl'] ?? '').toString().isNotEmpty
+                                          ? t('Rasmni almashtirish')
+                                          : t('Rasm qo‘shish'),
+                                      style: sans(13, weight: FontWeight.w700),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 _label(t('Taom nomi')),
                 TextField(
                   controller: _title,

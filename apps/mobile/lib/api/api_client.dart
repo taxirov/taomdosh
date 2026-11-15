@@ -10,6 +10,12 @@ const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:
 
 typedef Json = Map<String, dynamic>;
 
+/// Joriy server manzili (sozlamalarda o'zgartirilishi mumkin). Rasm manzillari ham shundan yasaladi.
+String currentApiBase = apiUrl;
+
+/// Serverdagi nisbiy manzil ("/uploads/dishes/x.jpg") → to'liq havola; tashqi havola o'zgarmaydi
+String mediaUrl(String url) => url.startsWith('/') ? '$currentApiBase$url' : url;
+
 class ApiException implements Exception {
   final int status;
   final String code;
@@ -68,6 +74,34 @@ class ApiClient {
   Future<dynamic> patch(String path, [Object? body]) => _send('PATCH', path, body: body);
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
+  /// Fayl yuklash (multipart, `file` maydoni) — taom rasmi, narx fayli
+  Future<dynamic> upload(String path, List<int> bytes, {String filename = 'file', bool retried = false}) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$currentApiBase$path'))
+      ..headers['Accept'] = 'application/json'
+      ..headers['Accept-Language'] = locale
+      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+    if (_access != null) req.headers['Authorization'] = 'Bearer $_access';
+    http.Response res;
+    try {
+      res = await http.Response.fromStream(await _http.send(req).timeout(const Duration(seconds: 60)));
+    } on TimeoutException {
+      throw ApiException(0, 'timeout');
+    } catch (_) {
+      throw ApiException(0, 'network');
+    }
+    if (res.statusCode == 401 && !retried && _refresh != null) {
+      if (await _refreshTokens()) return upload(path, bytes, filename: filename, retried: true);
+      onLoggedOut?.call();
+    }
+    final text = utf8.decode(res.bodyBytes);
+    final data = text.isEmpty ? null : jsonDecode(text);
+    if (res.statusCode >= 400) {
+      final msg = data is Map ? data['message'] : null;
+      throw ApiException(res.statusCode, res.statusCode == 413 ? 'file_too_large' : (msg is String ? msg : 'error'));
+    }
+    return data;
+  }
+
   Future<dynamic> _send(String method, String path, {Map<String, String?>? query, Object? body, bool retried = false}) async {
     final q = query == null
         ? null
@@ -75,7 +109,7 @@ class ApiClient {
             for (final e in query.entries)
               if (e.value != null) e.key: e.value!,
           };
-    final uri = Uri.parse('$apiUrl$path').replace(queryParameters: (q == null || q.isEmpty) ? null : q);
+    final uri = Uri.parse('$currentApiBase$path').replace(queryParameters: (q == null || q.isEmpty) ? null : q);
     final req = http.Request(method, uri)
       ..headers['Accept'] = 'application/json'
       ..headers['Accept-Language'] = locale;

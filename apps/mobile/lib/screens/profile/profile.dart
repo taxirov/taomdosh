@@ -7,6 +7,7 @@ import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../admin/moderation.dart';
 import '../auth/goal.dart';
 import '../auth/profile_setup.dart';
 import '../dishes/dishes.dart';
@@ -101,6 +102,13 @@ class ProfileScreen extends StatelessWidget {
               ),
               item(Icons.favorite_border_rounded, t('Sevimli taomlar'), null, () => open(const DishesScreen(favoritesOnly: true))),
               item(Icons.restaurant_menu_rounded, t('Mening taomlarim'), null, () => open(const DishesScreen(mineOnly: true))),
+              if (s.me?['isAdmin'] == true)
+                item(
+                  Icons.verified_user_outlined,
+                  t('Moderatsiya'),
+                  t('Kutilayotgan taom va cookbooklar'),
+                  () => open(const ModerationScreen()),
+                ),
             ],
           ),
           const SizedBox(height: 12),

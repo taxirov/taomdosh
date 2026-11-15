@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../api/api_client.dart';
 import '../format.dart';
 import '../i18n/strings.dart';
 import '../theme.dart';
@@ -62,7 +63,8 @@ class Wordmark extends StatelessWidget {
 
 /// 44 px dumaloq tugma (orqaga, yopish, qo'shish)
 class CircleBtn extends StatelessWidget {
-  const CircleBtn({super.key, required this.icon, required this.onTap, this.tooltip, this.filled = false});
+  const CircleBtn({super.key, required this.icon, required this.onTap, this.tooltip, this.filled = false, this.iconColor});
+  final Color? iconColor;
   final IconData icon;
   final VoidCallback? onTap;
   final String? tooltip;
@@ -76,7 +78,7 @@ class CircleBtn extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: SizedBox.square(dimension: 44, child: Icon(icon, size: 22, color: filled ? Colors.white : C.ink)),
+        child: SizedBox.square(dimension: 44, child: Icon(icon, size: 22, color: iconColor ?? (filled ? Colors.white : C.ink))),
       ),
     );
     return tooltip == null
@@ -328,7 +330,7 @@ class Avatar extends StatelessWidget {
   );
 }
 
-/// Taom rasmi yoki rang bilan to'ldirilgan joy
+/// Taom rasmi; rasm bo'lmasa — taomga xos rangdagi naqshli zaxira ko'rinish (dasturxon ustidagi lagan)
 class DishImage extends StatelessWidget {
   const DishImage({super.key, this.url, this.width, this.height, this.radius = 12, this.seed = ''});
   final String? url;
@@ -337,24 +339,86 @@ class DishImage extends StatelessWidget {
   final double radius;
   final String seed;
 
-  static const _tones = [Color(0xFFD9A47E), Color(0xFFE3BFA0), Color(0xFFEBCDB4), Color(0xFFC98B63), Color(0xFFC9D3B5)];
+  /// (fon, naqsh, ikonka) — dizayndagi iliq ohanglar
+  static const _tones = [
+    (Color(0xFFD9A47E), Color(0xFFE6BD9E), Color(0xFF7A3E22)),
+    (Color(0xFFE3BFA0), Color(0xFFEFD6C0), Color(0xFF8A4B2A)),
+    (Color(0xFFEBCDB4), Color(0xFFF5E2D2), Color(0xFF8F5A3A)),
+    (Color(0xFFC98B63), Color(0xFFDBA988), Color(0xFF5E2C14)),
+    (Color(0xFFC9D3B5), Color(0xFFDDE5CE), Color(0xFF3F5424)),
+    (Color(0xFFEBD3A0), Color(0xFFF4E4C2), Color(0xFF7A4B07)),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final ph = Container(
+    final tone = _tones[seed.hashCode.abs() % _tones.length];
+    final ph = SizedBox(
       width: width,
       height: height,
-      color: _tones[seed.hashCode.abs() % _tones.length],
-      alignment: Alignment.center,
-      child: Icon(Icons.restaurant_rounded, color: const Color(0x887A3E22), size: ((height ?? 52) * .4).clamp(16, 48)),
+      child: CustomPaint(
+        painter: _DishPlaceholderPainter(tone.$1, tone.$2, seed.hashCode),
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final side = c.biggest.shortestSide.isFinite ? c.biggest.shortestSide : (height ?? 52);
+            return Center(
+              child: Icon(Icons.restaurant_rounded, color: tone.$3.withValues(alpha: .7), size: (side * .38).clamp(16, 52)),
+            );
+          },
+        ),
+      ),
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: url == null || url!.isEmpty
           ? ph
-          : Image.network(url!, width: width, height: height, fit: BoxFit.cover, errorBuilder: (_, _, _) => ph),
+          : Image.network(
+              mediaUrl(url!),
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => ph,
+              // Rasm yuklanguncha zaxira ko'rinish, keyin yumshoq paydo bo'ladi
+              frameBuilder: (context, child, frame, sync) =>
+                  sync || frame != null ? child : Stack(fit: StackFit.passthrough, children: [ph]),
+            ),
     );
   }
+}
+
+/// Zaxira ko'rinish naqshi: burchakdagi "lagan" halqalari va mayda nuqtalar
+class _DishPlaceholderPainter extends CustomPainter {
+  _DishPlaceholderPainter(this.bg, this.accent, this.seed);
+  final Color bg;
+  final Color accent;
+  final int seed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = bg);
+    final r = size.shortestSide;
+    // Lagan: o'ng-past burchakdan chiqib turgan ikki halqa
+    final corner = seed.isEven ? Offset(size.width, size.height) : Offset(0, size.height);
+    canvas.drawCircle(corner, r * .78, Paint()..color = accent.withValues(alpha: .55));
+    canvas.drawCircle(
+      corner,
+      r * .5,
+      Paint()
+        ..color = bg.withValues(alpha: .9)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * .035,
+    );
+    if (r < 80) return; // kichik kvadratda nuqtalar ortiqcha
+    final dot = Paint()..color = accent.withValues(alpha: .7);
+    const step = 22.0;
+    for (var y = step / 2; y < size.height * .45; y += step) {
+      for (var x = step / 2 + ((y ~/ step).isEven ? 0 : step / 2); x < size.width; x += step) {
+        canvas.drawCircle(Offset(x, y), 1.6, dot);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DishPlaceholderPainter old) => old.bg != bg || old.accent != accent || old.seed != seed;
 }
 
 class SectionTitle extends StatelessWidget {
@@ -595,8 +659,11 @@ Future<bool> guard(BuildContext context, Future<void> Function() action) async {
 
 /// Oddiy yuklash: Future → yuklanmoqda / xato / ma'lumot; `reload()` bilan yangilanadi
 class Loader<T> extends StatefulWidget {
-  const Loader({super.key, required this.load, required this.builder});
+  const Loader({super.key, required this.load, required this.builder, this.skeleton});
   final Future<T> Function() load;
+
+  /// Yuklanayotganda ko'rsatiladigan skelet (bo'lmasa — umumiy ro'yxat skeleti)
+  final Widget? skeleton;
   final Widget Function(BuildContext context, T data, Future<void> Function() reload) builder;
 
   @override
@@ -631,7 +698,12 @@ class _LoaderState<T> extends State<Loader<T>> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading && _data == null) return const Loading();
+    if (_loading && _data == null) {
+      return widget.skeleton ??
+          const SafeArea(
+            child: Padding(padding: EdgeInsets.fromLTRB(20, 24, 20, 0), child: SkeletonList(rows: 6)),
+          );
+    }
     if (_error != null && _data == null) return ErrorView(error: _error!, onRetry: _reload);
     return widget.builder(context, _data as T, _reload);
   }
@@ -819,6 +891,103 @@ class SkeletonList extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    ),
+  );
+}
+
+/// Kichik ko'rsatkich kartochkasi: katta qiymat + izoh (taom vaqti, kaloriya, cookbook statistikasi)
+class StatTile extends StatelessWidget {
+  const StatTile(this.value, this.label, {super.key});
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      decoration: BoxDecoration(
+        color: C.card,
+        border: Border.all(color: C.line),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(value, style: sans(16, weight: FontWeight.w800)),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: sans(11, color: C.muted, height: 1.2),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Kartochka ichidagi qator: chapda nom, o'ngda qalin qiymat (masalliq — miqdor)
+class KeyValueRow extends StatelessWidget {
+  const KeyValueRow(this.label, this.value, {super.key});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(label, style: sans(14, weight: FontWeight.w600)),
+        ),
+        const SizedBox(width: 12),
+        Text(value, style: sans(14, weight: FontWeight.w800)),
+      ],
+    ),
+  );
+}
+
+/// Bosqich raqami doirasi
+class StepBadge extends StatelessWidget {
+  const StepBadge(this.text, {super.key, this.active = true});
+  final String text;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 30,
+    height: 30,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(color: active ? C.terracotta : C.lineSoft, shape: BoxShape.circle),
+    child: Text(
+      text,
+      textScaler: TextScaler.noScaling,
+      style: sans(13, weight: FontWeight.w800, color: active ? Colors.white : C.ink),
+    ),
+  );
+}
+
+/// Ekran pastidagi yopishgan tugmalar paneli
+class BottomBar extends StatelessWidget {
+  const BottomBar({super.key, required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: const BoxDecoration(
+      color: C.card,
+      border: Border(top: BorderSide(color: C.line)),
+    ),
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+        child: Row(children: children),
       ),
     ),
   );

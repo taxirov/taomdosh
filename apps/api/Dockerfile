@@ -17,6 +17,9 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
+# Yuklangan rasmlar papkasi (compose'da volume ulanadi); node foydalanuvchisi yoza olishi kerak
+ENV UPLOADS_DIR=/data/uploads
+RUN mkdir -p /data/uploads && chown -R node:node /data
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

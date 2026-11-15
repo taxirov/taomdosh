@@ -21,15 +21,16 @@ class CookbookDetailScreen extends StatelessWidget {
     return Scaffold(
       body: Loader<Json>(
         load: () async => await s.api.get('/cookbooks/$id') as Json,
-        builder: (context, c, _) => _Body(c: c),
+        builder: (context, c, reload) => _Body(key: ValueKey('${c['id']}-${c['updatedAt']}'), c: c, reload: reload),
       ),
     );
   }
 }
 
 class _Body extends StatefulWidget {
-  const _Body({required this.c});
+  const _Body({super.key, required this.c, required this.reload});
   final Json c;
+  final Future<void> Function() reload;
 
   @override
   State<_Body> createState() => _BodyState();
@@ -40,6 +41,23 @@ class _BodyState extends State<_Body> {
   bool _busy = false;
 
   List<Json> get _meals => (widget.c['meals'] as List).cast<Json>();
+
+  Future<void> _edit() async {
+    final changed = await Navigator.of(context).push<bool>(route(CookbookEditorScreen(edit: widget.c)));
+    if (changed == true) await widget.reload();
+  }
+
+  Future<void> _delete() async {
+    final s = context.read<Session>();
+    final yes = await confirm(
+      context,
+      t('“{name}” o‘chirilsinmi? Guruhlarga qo‘llangan rejalar o‘zgarmaydi.', {'name': widget.c['title']}),
+      ok: t('O‘chirish'),
+    );
+    if (!yes || !mounted) return;
+    final ok = await guard(context, () => s.api.delete('/cookbooks/${widget.c['id']}'));
+    if (ok && mounted) Navigator.of(context).pop(true);
+  }
 
   Future<void> _apply() async {
     final s = context.read<Session>();
@@ -133,6 +151,23 @@ class _BodyState extends State<_Body> {
                     ),
                   ),
                   Positioned(top: MediaQuery.of(context).padding.top + 12, left: 20, child: const BackBtn()),
+                  if (c['canEdit'] == true) ...[
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 12,
+                      right: 76,
+                      child: CircleBtn(icon: Icons.edit_outlined, tooltip: t('Tahrirlash'), onTap: _edit),
+                    ),
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 12,
+                      right: 20,
+                      child: CircleBtn(
+                        icon: Icons.delete_outline_rounded,
+                        iconColor: C.terracottaDark,
+                        tooltip: t('O‘chirish'),
+                        onTap: _delete,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               Padding(

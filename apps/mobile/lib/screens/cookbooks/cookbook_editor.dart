@@ -9,10 +9,12 @@ import '../../widgets/common.dart';
 import '../dishes/dish_picker.dart';
 import 'cookbook_detail.dart';
 
-/// Yangi cookbook: 7 kun × mahallar, har mahalga taom va qo'shimchalar
+/// Cookbook: 7 kun × mahallar, har mahalga taom va qo'shimchalar.
+/// `copyFrom` — nusxa olib yangi yaratish; `edit` — mavjudini tahrirlash (faqat muallif).
 class CookbookEditorScreen extends StatefulWidget {
-  const CookbookEditorScreen({super.key, this.copyFrom});
+  const CookbookEditorScreen({super.key, this.copyFrom, this.edit});
   final Json? copyFrom;
+  final Json? edit;
 
   @override
   State<CookbookEditorScreen> createState() => _CookbookEditorScreenState();
@@ -36,9 +38,10 @@ class _CookbookEditorScreenState extends State<CookbookEditorScreen> {
   @override
   void initState() {
     super.initState();
-    final c = widget.copyFrom;
+    final c = widget.edit ?? widget.copyFrom;
     if (c != null) {
-      _name.text = t('{name} (nusxa)', {'name': c['title']});
+      _name.text = widget.edit != null ? (c['title'] ?? '') : t('{name} (nusxa)', {'name': c['title']});
+      if (widget.edit != null) _public = c['visibility'] == 'public';
       for (final m in (c['meals'] as List).cast<Json>()) {
         final slot = _slot(m['dayIndex'] as int, m['mealType'] as String)..eatTime = m['eatTime'] as String?;
         for (final d in (m['dishes'] as List).cast<Json>()) {
@@ -90,7 +93,13 @@ class _CookbookEditorScreenState extends State<CookbookEditorScreen> {
     setState(() => _busy = true);
     final s = context.read<Session>();
     await guard(context, () async {
-      final c = await s.api.post('/cookbooks', {'title': _name.text.trim(), 'submitPublic': _public, 'meals': meals}) as Json;
+      final body = {'title': _name.text.trim(), 'submitPublic': _public, 'meals': meals};
+      if (widget.edit != null) {
+        await s.api.patch('/cookbooks/${widget.edit!['id']}', body);
+        if (mounted) Navigator.of(context).pop(true);
+        return;
+      }
+      final c = await s.api.post('/cookbooks', body) as Json;
       if (mounted) Navigator.of(context).pushReplacement(route(CookbookDetailScreen(id: c['id'])));
     });
     if (mounted) setState(() => _busy = false);
@@ -107,7 +116,7 @@ class _CookbookEditorScreenState extends State<CookbookEditorScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                 children: [
-                  ScreenHeader(title: t('Yangi cookbook'), close: true, big: false),
+                  ScreenHeader(title: widget.edit != null ? t('Cookbookni tahrirlash') : t('Yangi cookbook'), close: true, big: false),
                   const SizedBox(height: 16),
                   Text(t('Nomi'), style: sans(13, weight: FontWeight.w700)),
                   const SizedBox(height: 8),

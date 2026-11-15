@@ -303,6 +303,7 @@ export const dishes = pgTable(
     imageUrl: text('image_url'),
     videoUrl: text('video_url'),
     favoritesCount: integer('favorites_count').notNull().default(0),
+    deletedAt: tsz('deleted_at'), // muallif o'chirgan: katalogda ko'rinmaydi, eski mahallarda qoladi
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -374,6 +375,7 @@ export const cookbooks = pgTable('cookbooks', {
   moderationStatus: moderationStatus('moderation_status').notNull().default('pending'),
   days: integer('days').notNull().default(7),
   coverUrl: text('cover_url'),
+  deletedAt: tsz('deleted_at'), // o'chirilgan: ro'yxatda ko'rinmaydi, qo'llangan rejalar ishlayveradi
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
