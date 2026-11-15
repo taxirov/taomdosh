@@ -31,7 +31,7 @@ npm run test:e2e              # to'liq oqim (Postgres, Redis va seed kerak)
 | Bo'lim | Yo'llar |
 |---|---|
 | Kirish | `POST /auth/request-code`, `/auth/verify`, `/auth/refresh`, `/auth/logout` |
-| Profil | `GET/PATCH /me`, `PUT /me/profile`, `GET /me/measurements` |
+| Profil | `GET/PATCH /me`, `DELETE /me` (hisobni o'chirish), `PUT /me/profile`, `GET /me/measurements` |
 | Guruh | `POST/GET /groups`, `POST /groups/join`, `GET/PATCH /groups/:id`, a'zolar, `PUT /groups/:id/meal-settings`, navbatchilik `/groups/:id/duty…` |
 | Katalog | `GET /ingredients`, `GET/POST /dishes`, `PATCH/DELETE /dishes/:id`, `POST/DELETE /dishes/:id/image` (rasm → `/v1/uploads/…`), `/dishes/:id/favorite`, `GET/POST /cookbooks`, `PATCH/DELETE /cookbooks/:id` |
 | Moderatsiya (admin) | `GET /admin/moderation`, `POST /admin/moderation/{dishes\|cookbooks}/:id/{approve\|reject}` |

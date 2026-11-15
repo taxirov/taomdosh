@@ -516,6 +516,18 @@ const ru = <String, String>{
   'Hammasi ko‘rib chiqilgan': 'Всё проверено',
   'Yangi taom yoki cookbook ommaga chiqarishga yuborilsa, shu yerda paydo bo‘ladi.':
       'Когда блюдо или кукбук отправят на публикацию, они появятся здесь.',
+  'Server manzili': 'Адрес сервера',
+  'Standart: {url}': 'По умолчанию: {url}',
+  'Manzil o‘zgarsa, shu serverda qaytadan kirish kerak bo‘ladi.': 'После смены адреса нужно будет войти заново на этом сервере.',
+  'Standartga qaytarish': 'Сбросить',
+  'Manzil noto‘g‘ri': 'Неверный адрес',
+  'Server manzili o‘zgardi': 'Адрес сервера изменён',
+  'Hisobni o‘chirish': 'Удалить аккаунт',
+  'Shaxsiy ma’lumotlar butunlay o‘chiriladi': 'Личные данные будут удалены навсегда',
+  'Hisob o‘chirilsinmi?': 'Удалить аккаунт?',
+  'Telefon raqamingiz, profil, vazn o‘lchovlari va sevimlilar butunlay o‘chiriladi, barcha guruhlardan chiqasiz. Guruh xarajatlari tarixi hisob-kitob buzilmasligi uchun ismsiz qoladi. Buni qaytarib bo‘lmaydi.':
+      'Ваш номер телефона, профиль, замеры веса и избранное будут удалены навсегда, вы выйдете из всех групп. История расходов групп останется без имени, чтобы расчёты не нарушились. Это действие необратимо.',
+  'Ha, o‘chirish': 'Да, удалить',
 };
 
 const en = <String, String>{
@@ -1034,4 +1046,17 @@ const en = <String, String>{
   'Hammasi ko‘rib chiqilgan': 'All reviewed',
   'Yangi taom yoki cookbook ommaga chiqarishga yuborilsa, shu yerda paydo bo‘ladi.':
       'New dishes or cookbooks submitted for publishing will show up here.',
+  'Server manzili': 'Server address',
+  'Standart: {url}': 'Default: {url}',
+  'Manzil o‘zgarsa, shu serverda qaytadan kirish kerak bo‘ladi.':
+      'After changing the address you will need to sign in again on that server.',
+  'Standartga qaytarish': 'Reset to default',
+  'Manzil noto‘g‘ri': 'Invalid address',
+  'Server manzili o‘zgardi': 'Server address changed',
+  'Hisobni o‘chirish': 'Delete account',
+  'Shaxsiy ma’lumotlar butunlay o‘chiriladi': 'Your personal data will be permanently deleted',
+  'Hisob o‘chirilsinmi?': 'Delete your account?',
+  'Telefon raqamingiz, profil, vazn o‘lchovlari va sevimlilar butunlay o‘chiriladi, barcha guruhlardan chiqasiz. Guruh xarajatlari tarixi hisob-kitob buzilmasligi uchun ismsiz qoladi. Buni qaytarib bo‘lmaydi.':
+      'Your phone number, profile, weight measurements and favourites will be permanently deleted and you will leave all groups. Group expense history stays without your name so the balances remain correct. This cannot be undone.',
+  'Ha, o‘chirish': 'Yes, delete',
 };

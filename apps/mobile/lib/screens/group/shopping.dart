@@ -82,7 +82,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   String? _asOf; // narxlar sanasi
   Object? _error;
   bool _busy = false;
-  bool _stale = false; // oflayn — keshdan ko'rsatilmoqda
 
   @override
   void initState() {
@@ -94,7 +93,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     final s = context.read<Session>();
     try {
       final r = await s.api.get('/groups/${s.groupId}/shopping');
-      final stale = s.api.lastFromCache;
       String? asOf = _asOf;
       try {
         asOf = ((await s.api.get('/groups/${s.groupId}/shopping/estimate')) as Json)['asOf'] as String?;
@@ -104,7 +102,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
           _items = (r as List).cast<Json>();
           _asOf = asOf;
           _error = null;
-          _stale = stale;
         });
       }
     } catch (e) {
@@ -271,7 +268,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                       subtitle: _subtitle(s, pending),
                       trailing: CircleBtn(icon: Icons.add_rounded, filled: true, tooltip: t('Qo‘lda qo‘shish'), onTap: _addManual),
                     ),
-                    if (_stale) ...[const SizedBox(height: 10), const OfflineBadge()],
                     const SizedBox(height: 14),
                     Segmented<int>(
                       items: {1: t('Ertaga'), 3: t('3 kun'), 7: t('Butun hafta')},

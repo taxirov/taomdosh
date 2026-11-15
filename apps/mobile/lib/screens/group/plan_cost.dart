@@ -19,7 +19,6 @@ class PlanCostCard extends StatefulWidget {
 
 class _PlanCostCardState extends State<PlanCostCard> {
   Json? _est;
-  bool _stale = false;
 
   @override
   void initState() {
@@ -38,12 +37,7 @@ class _PlanCostCardState extends State<PlanCostCard> {
       final future = plans.where((p) => (p['weekStart'] as String).compareTo(thisWeek) > 0);
       final plan = current.isNotEmpty ? current.first : (future.isNotEmpty ? future.last : plans.first);
       final est = await s.api.get('/groups/${s.groupId}/plans/${plan['id']}/estimate') as Json;
-      if (mounted) {
-        setState(() {
-          _est = est;
-          _stale = s.api.lastFromCache;
-        });
-      }
+      if (mounted) setState(() => _est = est);
     } catch (_) {
       // Taxminiy ma'lumot — xatoda kartochka shunchaki ko'rinmaydi
     }
@@ -97,7 +91,6 @@ class _PlanCostCardState extends State<PlanCostCard> {
             ),
             const SizedBox(height: 8),
             Text(note, style: sans(12, color: C.muted)),
-            if (_stale) ...[const SizedBox(height: 8), const OfflineBadge()],
           ],
         ),
       ),

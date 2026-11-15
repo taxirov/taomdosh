@@ -801,28 +801,30 @@ class CheckMark extends StatelessWidget {
   );
 }
 
-/// Internet yo'q — oxirgi saqlangan ma'lumot ko'rsatilayotgani belgisi
-class OfflineBadge extends StatelessWidget {
-  const OfflineBadge({super.key});
+/// Oflayn belgisi: internet yo'q — oxirgi saqlangan ma'lumot ko'rsatilmoqda (ekran tepasida)
+class OfflineBar extends StatelessWidget {
+  const OfflineBar({super.key});
 
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerLeft,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: C.lineSoft, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_rounded, size: 15, color: C.muted),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              t('Oflayn — oxirgi saqlangan ma’lumot'),
-              style: sans(12, weight: FontWeight.w700, color: C.muted),
+  Widget build(BuildContext context) => Material(
+    color: C.ink,
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 16, color: C.mustardLight),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                t('Oflayn — oxirgi saqlangan ma’lumot'),
+                style: sans(12, weight: FontWeight.w700, color: C.card),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );

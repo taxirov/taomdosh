@@ -1,10 +1,26 @@
-import { Body, Controller, Get, Injectable, Module, Patch, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Injectable, Module, Patch, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsDateString, IsIn, IsInt, IsNumber, IsOptional, IsString, Length, Max, Min } from 'class-validator';
-import { desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { AuthUser, CurrentUser, isPlatformAdmin } from '../../common/auth';
 import { Db, InjectDb } from '../../common/infra.module';
-import { activityLevel, bodyMeasurements, goalEnum, nutritionTargets, sexEnum, userProfiles, users } from '../../db/schema';
+import {
+  activityLevel,
+  bodyMeasurements,
+  consents,
+  devices,
+  dishes,
+  dutyRotations,
+  favorites,
+  goalEnum,
+  groupMembers,
+  nutritionTargets,
+  portionFactors,
+  refreshTokens,
+  sexEnum,
+  userProfiles,
+  users,
+} from '../../db/schema';
 import type { ActivityLevel, Goal, Sex } from '../../db/schema';
 import { normalizeLocale } from '../../domain/i18n';
 import { computeTarget, NutritionTarget } from '../../domain/nutrition';
@@ -23,6 +39,9 @@ export class ProfileDto {
   @IsOptional() @IsIn(goalEnum.enumValues) goal?: Goal;
   @IsOptional() @IsNumber() @Min(2) @Max(350) targetWeightKg?: number;
 }
+
+/** O'chirilgan hisob tarixda shu nom bilan ko'rinadi */
+export const DELETED_NAME = 'O‘chirilgan hisob';
 
 @Injectable()
 export class UsersService {
@@ -70,6 +89,65 @@ export class UsersService {
       formulaVersion: t.formulaVersion,
     });
     return this.me(userId);
+  }
+
+  /**
+   * Hisobni o'chirish: shaxsiy ma'lumotlar (telefon, ism, profil, o'lchovlar, qurilmalar, sevimlilar)
+   * o'chiriladi, sessiyalar bekor qilinadi, guruhlardan chiqariladi. Boshqariladigan (bola) hisoblar ham.
+   * Xarajat va porsiya tarixi guruh hisob-kitobi buzilmasligi uchun "O'chirilgan hisob" nomi bilan qoladi.
+   */
+  async deleteAccount(userId: string) {
+    await this.db.transaction(async (tx) => {
+      const managed = await tx.select({ id: users.id }).from(users).where(eq(users.managedBy, userId));
+      const ids = [userId, ...managed.map((m) => m.id)];
+      const now = new Date();
+
+      const memberships = await tx
+        .select()
+        .from(groupMembers)
+        .where(and(inArray(groupMembers.userId, ids), isNull(groupMembers.leftAt)));
+      await tx.update(groupMembers).set({ leftAt: now, role: 'member' }).where(and(inArray(groupMembers.userId, ids), isNull(groupMembers.leftAt)));
+      for (const groupId of new Set(memberships.map((m) => m.groupId))) {
+        // Navbatchilik aylanishidan chiqarish
+        const rots = await tx.select().from(dutyRotations).where(eq(dutyRotations.groupId, groupId));
+        for (const r of rots) {
+          await tx
+            .update(dutyRotations)
+            .set({ memberOrder: r.memberOrder.filter((id) => !ids.includes(id)) })
+            .where(and(eq(dutyRotations.groupId, groupId), eq(dutyRotations.dutyRole, r.dutyRole)));
+        }
+        // Guruh adminsiz qolmasin: eng avval qo'shilgan (telefoni bor) a'zo admin bo'ladi
+        const left = await tx
+          .select({ id: groupMembers.id, role: groupMembers.role })
+          .from(groupMembers)
+          .innerJoin(users, eq(users.id, groupMembers.userId))
+          .where(and(eq(groupMembers.groupId, groupId), isNull(groupMembers.leftAt), isNull(users.managedBy)))
+          .orderBy(asc(groupMembers.joinedAt));
+        if (left.length && !left.some((m) => m.role === 'admin')) {
+          await tx.update(groupMembers).set({ role: 'admin' }).where(eq(groupMembers.id, left[0].id));
+        }
+      }
+
+      const favs = await tx.delete(favorites).where(inArray(favorites.userId, ids)).returning({ dishId: favorites.dishId });
+      if (favs.length) {
+        await tx
+          .update(dishes)
+          .set({ favoritesCount: sql`greatest(${dishes.favoritesCount} - 1, 0)` })
+          .where(inArray(dishes.id, favs.map((f) => f.dishId)));
+      }
+      await tx.update(refreshTokens).set({ revokedAt: now }).where(and(inArray(refreshTokens.userId, ids), isNull(refreshTokens.revokedAt)));
+      await tx.delete(devices).where(inArray(devices.userId, ids));
+      await tx.delete(userProfiles).where(inArray(userProfiles.userId, ids));
+      await tx.delete(bodyMeasurements).where(inArray(bodyMeasurements.userId, ids));
+      await tx.delete(nutritionTargets).where(inArray(nutritionTargets.userId, ids));
+      await tx.delete(portionFactors).where(inArray(portionFactors.userId, ids));
+      await tx.delete(consents).where(inArray(consents.userId, ids));
+      await tx
+        .update(users)
+        .set({ status: 'deleted', phone: null, name: DELETED_NAME, role: 'user' })
+        .where(or(eq(users.id, userId), eq(users.managedBy, userId)));
+    });
+    return { ok: true };
   }
 
   async currentTarget(userId: string): Promise<NutritionTarget> {
@@ -120,6 +198,12 @@ export class UsersController {
   @Put('profile')
   profile(@CurrentUser() u: AuthUser, @Body() dto: ProfileDto) {
     return this.users.upsertProfile(u.id, dto);
+  }
+
+  /** Hisobni butunlay o'chirish (qaytarib bo'lmaydi) */
+  @Delete()
+  deleteAccount(@CurrentUser() u: AuthUser) {
+    return this.users.deleteAccount(u.id);
   }
 
   @Get('measurements')

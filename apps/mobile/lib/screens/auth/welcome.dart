@@ -5,6 +5,7 @@ import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../profile/server_url.dart';
 import 'telegram_login.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -63,6 +64,17 @@ class WelcomeScreen extends StatelessWidget {
                         for (final l in supportedLocales)
                           ChoicePill(label: localeNames[l]!, selected: s.locale == l, onTap: () => s.setLocale(l)),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Sinov serveri (uy serveri, tunnel) manzilini kirishdan oldin ham o'zgartirish mumkin
+                    Center(
+                      child: TextButton(
+                        onPressed: () => showServerUrlDialog(context),
+                        child: Text(
+                          t('Server manzili'),
+                          style: sans(13, weight: FontWeight.w700, color: C.muted),
+                        ),
+                      ),
                     ),
                   ],
                 ),
