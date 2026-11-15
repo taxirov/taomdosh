@@ -21,6 +21,9 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       AUTH_TEST_PHONES: ${AUTH_TEST_PHONES:-}
       AUTH_TEST_CODE: ${AUTH_TEST_CODE:-}
+      # Kunlik narxlar (08:00, Asia/Tashkent); "off" — o'chirish
+      PRICES_SYNC_ENABLED: ${PRICES_SYNC_ENABLED:-on}
+      ADMIN_PHONES: ${ADMIN_PHONES:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_started }

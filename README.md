@@ -37,6 +37,7 @@ npm run test:e2e              # to'liq oqim (Postgres, Redis va seed kerak)
 | Reja va mahallar | `POST/GET /groups/:id/plans`, `DELETE /groups/:id/plans/:planId`, `GET /groups/:id/meals?from&to`, `GET /meals/:id`, `PUT /meals/:id/attendance`, `POST /meals/:id/lock`, `GET /meals/:id/cook-view`, `POST /meals/:id/feedback` |
 | Xarid va zaxira | `POST /groups/:id/shopping/regenerate`, `GET/POST /groups/:id/shopping`, `PATCH/DELETE /groups/:id/shopping/:itemId`, `GET /groups/:id/pantry`, `PUT /groups/:id/pantry/:ingredientId`, `GET /groups/:id/pantry/movements` |
 | Xarajat | `POST/GET /groups/:id/expenses`, `POST …/expenses/:expenseId/recalculate`, `DELETE …/expenses/:expenseId`, `GET /groups/:id/balances`, `POST/GET /groups/:id/settlements` |
+| Narxlar | `GET /prices`, `GET /groups/:id/prices`, `PUT/DELETE /groups/:id/prices/:ingredientId`, admin: `POST /admin/prices/import` (Excel), `POST /admin/prices/sync` |
 | Holat | `GET /health` |
 
 To'liq sxema: `http://localhost:3000/docs`.

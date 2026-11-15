@@ -8,6 +8,7 @@ import { Db, InfraModule, InjectDb } from './common/infra.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { GroupsModule } from './modules/groups/groups.module';
+import { PricesModule } from './modules/prices/prices.module';
 import { MealsModule } from './modules/meals/meals.module';
 import { ShoppingModule } from './modules/shopping/shopping.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
@@ -42,6 +43,7 @@ class HealthController {
     MealsModule,
     ShoppingModule,
     ExpensesModule,
+    PricesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],

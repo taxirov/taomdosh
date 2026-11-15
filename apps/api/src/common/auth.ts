@@ -11,7 +11,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { and, eq, isNull } from 'drizzle-orm';
-import { groupMembers } from '../db/schema';
+import { groupMembers, users } from '../db/schema';
 import type { Db } from './infra.module';
 
 export interface AuthUser {
@@ -60,4 +60,24 @@ export async function requireMember(db: Db, groupId: string, userId: string, opt
   if (!m) throw new NotFoundException('group_not_found');
   if (opts.admin && m.role !== 'admin') throw new ForbiddenException('admin_only');
   return m;
+}
+
+/** ADMIN_PHONES (.env, vergul bilan) dagi raqamlar — platforma admini */
+function adminPhones(): string[] {
+  return (process.env.ADMIN_PHONES ?? '')
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+/** Platforma admini: users.role = admin yoki telefoni ADMIN_PHONES da */
+export function isPlatformAdmin(user: { role: string; phone: string | null } | undefined | null): boolean {
+  if (!user) return false;
+  return user.role === 'admin' || (!!user.phone && adminPhones().includes(user.phone));
+}
+
+/** Moderatsiya va narx yuklash kabi platforma amallari uchun */
+export async function requireAdmin(db: Db, userId: string) {
+  const [u] = await db.select({ role: users.role, phone: users.phone, status: users.status }).from(users).where(eq(users.id, userId));
+  if (!u || u.status !== 'active' || !isPlatformAdmin(u)) throw new ForbiddenException('admin_only');
 }

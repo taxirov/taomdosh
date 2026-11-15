@@ -1,0 +1,604 @@
+{
+ "products": [
+  {
+   "product_id": 10,
+   "name": "Tuxum (10 dona)",
+   "price": 12692,
+   "prevPrice": 12574,
+   "change": {
+    "nominal": 118,
+    "pct": 0.9
+   },
+   "unit": "10 d.",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 118,
+      "pct": 0.9
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 1,
+   "name": "Olma",
+   "price": 11228,
+   "prevPrice": 11249,
+   "change": {
+    "nominal": -21,
+    "pct": -0.2
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -21,
+      "pct": -0.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 3,
+   "name": "Pomidor",
+   "price": 10303,
+   "prevPrice": 9183,
+   "change": {
+    "nominal": 1120,
+    "pct": 12.2
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 1120,
+      "pct": 12.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 5,
+   "name": "Loviya",
+   "price": 18995,
+   "prevPrice": 18884,
+   "change": {
+    "nominal": 110,
+    "pct": 0.6
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 110,
+      "pct": 0.6
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 16,
+   "name": "Uzum",
+   "price": 12286,
+   "prevPrice": 11918,
+   "change": {
+    "nominal": 367,
+    "pct": 3.1
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 367,
+      "pct": 3.1
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 21,
+   "name": "1-navli undan non",
+   "price": 6345,
+   "prevPrice": 6304,
+   "change": {
+    "nominal": 41,
+    "pct": 0.7
+   },
+   "unit": "1 dona",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 41,
+      "pct": 0.7
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 23,
+   "name": "Yangi soğilgan sut",
+   "price": 7939,
+   "prevPrice": 7844,
+   "change": {
+    "nominal": 95,
+    "pct": 1.2
+   },
+   "unit": "1 litr",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 95,
+      "pct": 1.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 24,
+   "name": "Limon",
+   "price": 34150,
+   "prevPrice": 35527,
+   "change": {
+    "nominal": -1377,
+    "pct": -3.9
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -1377,
+      "pct": -3.9
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 25,
+   "name": "Nok",
+   "price": 18143,
+   "prevPrice": 18046,
+   "change": {
+    "nominal": 97,
+    "pct": 0.5
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 97,
+      "pct": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 26,
+   "name": "Karam",
+   "price": 4268,
+   "prevPrice": 4212,
+   "change": {
+    "nominal": 55,
+    "pct": 1.3
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 55,
+      "pct": 1.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 27,
+   "name": "Bodring",
+   "price": 10810,
+   "prevPrice": 9315,
+   "change": {
+    "nominal": 1496,
+    "pct": 16.1
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 1496,
+      "pct": 16.1
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 28,
+   "name": "Baqlajon",
+   "price": 6681,
+   "prevPrice": 6216,
+   "change": {
+    "nominal": 465,
+    "pct": 7.5
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 465,
+      "pct": 7.5
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 29,
+   "name": "Sabzi",
+   "price": 4775,
+   "prevPrice": 5022,
+   "change": {
+    "nominal": -248,
+    "pct": -4.9
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -248,
+      "pct": -4.9
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 30,
+   "name": "Sarimsoq",
+   "price": 16187,
+   "prevPrice": 15901,
+   "change": {
+    "nominal": 287,
+    "pct": 1.8
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 287,
+      "pct": 1.8
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 31,
+   "name": "Piyoz",
+   "price": 3020,
+   "prevPrice": 2789,
+   "change": {
+    "nominal": 230,
+    "pct": 8.2
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 230,
+      "pct": 8.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 36,
+   "name": "Baliq",
+   "price": 37493,
+   "prevPrice": 37601,
+   "change": {
+    "nominal": -108,
+    "pct": -0.3
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -108,
+      "pct": -0.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 39,
+   "name": "Un (oliy nav)",
+   "price": 9398,
+   "prevPrice": 9361,
+   "change": {
+    "nominal": 37,
+    "pct": 0.4
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 37,
+      "pct": 0.4
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 40,
+   "name": "Un (1-nav)",
+   "price": 6269,
+   "prevPrice": 6253,
+   "change": {
+    "nominal": 16,
+    "pct": 0.3
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 16,
+      "pct": 0.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 6,
+   "name": "Nöxat",
+   "price": 21089,
+   "prevPrice": 21020,
+   "change": {
+    "nominal": 69,
+    "pct": 0.3
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 69,
+      "pct": 0.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 7,
+   "name": "Moş",
+   "price": 19130,
+   "prevPrice": 19175,
+   "change": {
+    "nominal": -44,
+    "pct": -0.2
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -44,
+      "pct": -0.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 9,
+   "name": "Bulğor qalampiri",
+   "price": 9996,
+   "prevPrice": 9315,
+   "change": {
+    "nominal": 681,
+    "pct": 7.3
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 681,
+      "pct": 7.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 19,
+   "name": "Guruç",
+   "price": 14967,
+   "prevPrice": 14965,
+   "change": {
+    "nominal": 2,
+    "pct": 0.0
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 2,
+      "pct": 0.0
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 22,
+   "name": "Qöy göşti",
+   "price": 137477,
+   "prevPrice": 137219,
+   "change": {
+    "nominal": 258,
+    "pct": 0.2
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 258,
+      "pct": 0.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 32,
+   "name": "Kartoşka",
+   "price": 5010,
+   "prevPrice": 4927,
+   "change": {
+    "nominal": 83,
+    "pct": 1.7
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 83,
+      "pct": 1.7
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 33,
+   "name": "Şakar",
+   "price": 12332,
+   "prevPrice": 12397,
+   "change": {
+    "nominal": -64,
+    "pct": -0.5
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": -64,
+      "pct": -0.5
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 34,
+   "name": "Mol göşti",
+   "price": 125711,
+   "prevPrice": 125538,
+   "change": {
+    "nominal": 173,
+    "pct": 0.1
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 173,
+      "pct": 0.1
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 35,
+   "name": "Tovuq göşti",
+   "price": 32515,
+   "prevPrice": 32498,
+   "change": {
+    "nominal": 16,
+    "pct": 0.1
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 16,
+      "pct": 0.1
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 37,
+   "name": "Paxta yoği",
+   "price": 20355,
+   "prevPrice": 20292,
+   "change": {
+    "nominal": 63,
+    "pct": 0.3
+   },
+   "unit": "1 L",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 63,
+      "pct": 0.3
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 38,
+   "name": "Kungaboqar yoği",
+   "price": 21531,
+   "prevPrice": 21488,
+   "change": {
+    "nominal": 43,
+    "pct": 0.2
+   },
+   "unit": "1 L",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 43,
+      "pct": 0.2
+     }
+    }
+   ]
+  },
+  {
+   "product_id": 41,
+   "name": "Sariyoğ",
+   "price": 69727,
+   "prevPrice": 68730,
+   "change": {
+    "nominal": 997,
+    "pct": 1.4
+   },
+   "unit": "1 kg",
+   "performance": [
+    {
+     "period": "1W",
+     "change": {
+      "nominal": 997,
+      "pct": 1.4
+     }
+    }
+   ]
+  }
+ ]
+}
