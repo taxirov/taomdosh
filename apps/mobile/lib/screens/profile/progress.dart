@@ -87,7 +87,7 @@ class _BodyState extends State<_Body> {
     final delta = points.length >= 2 ? (points.last['weightKg'] as num) - (points.first['weightKg'] as num) : null;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       children: [
         ScreenHeader(title: t('Vazn va bo‘y')),
         const SizedBox(height: 16),
@@ -173,7 +173,11 @@ class _BodyState extends State<_Body> {
         SectionTitle(t('Tarix')),
         const SizedBox(height: 10),
         if (widget.list.isEmpty)
-          EmptyView(text: t('Hali o‘lchov yo‘q'))
+          EmptyView(
+            icon: Icons.monitor_weight_outlined,
+            title: t('Hali o‘lchov yo‘q'),
+            text: t('Vazningizni kiriting — o‘zgarish shu yerda ko‘rinadi.'),
+          )
         else
           CardList(
             children: [

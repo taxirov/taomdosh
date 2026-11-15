@@ -102,7 +102,7 @@ class _Body extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: reload,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           ScreenHeader(title: t('Navbatchilik')),
           const SizedBox(height: 16),
@@ -124,7 +124,12 @@ class _Body extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          if (activeRoles.isEmpty) EmptyView(text: t('Navbatchilik yoqilmagan')),
+          if (activeRoles.isEmpty)
+            EmptyView(
+              icon: Icons.event_repeat_rounded,
+              title: t('Navbatchilik yoqilmagan'),
+              text: t('Yuqoridagi almashtirgichlar bilan oshpaz, idish yuvish yoki xarid navbatini yoqing.'),
+            ),
           for (var i = 0; i < 7; i++)
             Builder(
               builder: (context) {

@@ -162,7 +162,7 @@ class _BodyState extends State<_Body> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    DishImage(url: d['imageUrl'], radius: 0, seed: d['id']),
+                    DishImage(url: d['imageUrl'], radius: 0, seed: d['id'], showIcon: !hasVideo),
                     Positioned(top: top + 20, left: 20, child: const BackBtn()),
                     Positioned(
                       top: top + 20,
@@ -243,7 +243,15 @@ class _BodyState extends State<_Body> {
                     ],
                     if (saved > 0) ...[
                       const SizedBox(height: 8),
-                      Text(t('♥ {n} kishi saqlagan', {'n': groupDigits(saved)}), style: sans(13, color: C.muted)),
+                      Row(
+                        children: [
+                          const Icon(Icons.favorite_rounded, size: 14, color: C.terracotta),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(t('{n} kishi saqlagan', {'n': groupDigits(saved)}), style: sans(13, color: C.muted)),
+                          ),
+                        ],
+                      ),
                     ],
                     const SizedBox(height: 18),
                     Row(
@@ -337,6 +345,7 @@ class _BodyState extends State<_Body> {
           BottomBar(
             children: [
               Expanded(
+                flex: 2,
                 child: SecondaryButton(label: t('O‘chirish'), color: C.terracottaDark, onPressed: _delete),
               ),
               const SizedBox(width: 10),

@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taomdosh/api/api_client.dart';
@@ -11,16 +8,10 @@ import 'package:taomdosh/app.dart';
 import 'package:taomdosh/format.dart';
 import 'package:taomdosh/state/session.dart';
 
-/// Soxta API: yo'l → javob
-http.Client fakeApi(Map<String, Object> routes, {List<String>? calls}) => MockClient((req) async {
-  final key = '${req.method} ${req.url.path.replaceFirst(RegExp(r'^/v1'), '')}';
-  calls?.add(key);
-  final body = routes[key];
-  if (body == null) return http.Response(jsonEncode({'message': 'not_found'}), 404);
-  return http.Response.bytes(utf8.encode(jsonEncode(body)), 200, headers: {'content-type': 'application/json'});
-});
+import 'helpers.dart';
 
 Future<void> pumpApp(WidgetTester tester, http.Client client) async {
+  await tester.runAsync(loadAppFonts);
   // Telefon ekrani (390×1400 — uzun "Bugun" ro'yxati to'liq chizilsin)
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;

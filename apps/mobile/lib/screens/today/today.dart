@@ -65,6 +65,7 @@ class TodayScreen extends StatelessWidget {
       child: Loader<TodayData>(
         key: ValueKey(s.groupId),
         load: () => loadToday(s),
+        skeleton: const _TodaySkeleton(),
         builder: (context, d, reload) => RefreshIndicator(
           color: C.terracotta,
           onRefresh: reload,
@@ -96,7 +97,7 @@ class _TodayBody extends StatelessWidget {
     void open(Widget w) => Navigator.of(context).push(route(w)).then((_) => reload());
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,10 +115,29 @@ class _TodayBody extends StatelessWidget {
                 ],
               ),
             ),
-            CircleBtn(
-              icon: Icons.notifications_none_rounded,
-              tooltip: t('Bildirishnomalar'),
-              onTap: () => open(NotificationsScreen(data: data)),
+            Stack(
+              children: [
+                CircleBtn(
+                  icon: Icons.notifications_none_rounded,
+                  tooltip: t('Bildirishnomalar'),
+                  onTap: () => open(NotificationsScreen(data: data)),
+                ),
+                // Yangi eslatma bor: javob kutilayotgan mahal yoki oldindan tayyorgarlik
+                if (next != null || prep.isNotEmpty)
+                  Positioned(
+                    top: 10,
+                    right: 11,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: C.terracotta,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: C.card, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -173,10 +193,11 @@ class _TodayBody extends StatelessWidget {
           AppCard(
             child: EmptyView(
               icon: Icons.menu_book_outlined,
-              text: t('Bugun uchun reja yo‘q. Cookbook tanlab, guruhga qo‘llang.'),
+              title: t('Bugun uchun reja yo‘q'),
+              text: t('Cookbook tanlab, guruhga qo‘llang — mahallar shu yerda paydo bo‘ladi.'),
               action: SizedBox(
                 width: 220,
-                child: SecondaryButton(label: t('Cookbook tanlash'), height: 46, onPressed: () => HomeShell.go(context, 1)),
+                child: SecondaryButton(label: t('Cookbook tanlash'), height: 48, onPressed: () => HomeShell.go(context, 1)),
               ),
             ),
           ),
@@ -209,38 +230,32 @@ class _TodayBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 2.3,
+        TileGrid(
           children: [
-            _Tile(
+            QuickTile(
               t('Xarid ro‘yxati'),
-              data.pendingShopping == null ? '' : t('{n} ta mahsulot', {'n': data.pendingShopping}),
-              () => open(const ShoppingScreen()),
+              sub: data.pendingShopping == null ? null : t('{n} ta mahsulot', {'n': data.pendingShopping}),
+              onTap: () => open(const ShoppingScreen()),
             ),
-            _Tile(
+            QuickTile(
               t('Navbatchilik'),
-              data.tomorrowCook == null ? '' : t('Ertaga: {name}', {'name': s.memberName(data.tomorrowCook)}),
-              () => open(const DutyScreen()),
+              sub: data.tomorrowCook == null ? null : t('Ertaga: {name}', {'name': s.memberName(data.tomorrowCook)}),
+              onTap: () => open(const DutyScreen()),
             ),
-            _Tile(
+            QuickTile(
               t('Xarajatlar'),
-              data.myBalance == null || data.myBalance == 0
+              sub: data.myBalance == null || data.myBalance == 0
                   ? t('Hisob teng')
                   : data.myBalance! > 0
                   ? t('+{sum} sizga', {'sum': money(data.myBalance!)})
                   : t('{sum} qarzingiz', {'sum': money(-data.myBalance!)}),
-              () => open(const ExpensesScreen()),
-              color: (data.myBalance ?? 0) > 0 ? C.olive : ((data.myBalance ?? 0) < 0 ? C.terracottaDark : C.muted),
+              subColor: (data.myBalance ?? 0) > 0 ? C.olive : ((data.myBalance ?? 0) < 0 ? C.terracottaDark : C.muted),
+              onTap: () => open(const ExpensesScreen()),
             ),
-            _Tile(
+            QuickTile(
               t('Zaxira'),
-              data.pantryCount == null ? '' : t('{n} ta mahsulot', {'n': data.pantryCount}),
-              () => open(const PantryScreen()),
+              sub: data.pantryCount == null ? null : t('{n} ta mahsulot', {'n': data.pantryCount}),
+              onTap: () => open(const PantryScreen()),
             ),
           ],
         ),
@@ -249,36 +264,29 @@ class _TodayBody extends StatelessWidget {
   }
 }
 
-class _Tile extends StatelessWidget {
-  const _Tile(this.title, this.sub, this.onTap, {this.color = C.muted});
-  final String title;
-  final String sub;
-  final VoidCallback onTap;
-  final Color color;
+/// Yuklanayotganda: sarlavha, kaloriya kartochkasi va mahallar o'rnida skelet
+class _TodaySkeleton extends StatelessWidget {
+  const _TodaySkeleton();
 
   @override
-  Widget build(BuildContext context) => AppCard(
-    onTap: onTap,
-    radius: 16,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          title,
-          style: sans(14, weight: FontWeight.w700),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          sub,
-          style: sans(12, weight: FontWeight.w700, color: color),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => ListView(
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+    children: const [
+      Skeleton(width: 140, height: 13),
+      SizedBox(height: 10),
+      Skeleton(width: 200, height: 30),
+      SizedBox(height: 20),
+      Skeleton(height: 74, radius: 18),
+      SizedBox(height: 20),
+      Skeleton(width: 150, height: 16),
+      SizedBox(height: 12),
+      Skeleton(height: 76, radius: 16),
+      SizedBox(height: 10),
+      Skeleton(height: 76, radius: 16),
+      SizedBox(height: 10),
+      Skeleton(height: 260, radius: 20),
+    ],
   );
 }
 
@@ -384,7 +392,7 @@ class _NextMealCardState extends State<_NextMealCard> {
 
     Widget choice(String label, bool on, String status) => Expanded(
       child: SizedBox(
-        height: 46,
+        height: 48,
         child: on
             ? FilledButton(
                 style: FilledButton.styleFrom(
@@ -474,18 +482,28 @@ class _NextMealCardState extends State<_NextMealCard> {
                 const SizedBox(height: 12),
                 Row(children: [choice(t('Yeyman'), eat, 'eating'), const SizedBox(width: 8), choice(t('Yo‘qman'), !eat, 'not_eating')]),
                 const SizedBox(height: 10),
-                Row(
+                // Tor ekran yoki katta shriftda havola keyingi qatorga tushadi (kesilmaydi)
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
                   children: [
-                    Expanded(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Text(
-                        t('{n} kishi yeydi · {g} mehmon', {'n': _m['eatingCount'], 'g': _m['guestsCount']}),
+                        t('{n} porsiya · {m} a’zo + {g} mehmon', {
+                          'n': (_m['eatingCount'] as num) + (_m['guestsCount'] as num),
+                          'm': _m['eatingCount'],
+                          'g': _m['guestsCount'],
+                        }),
                         style: sans(13, color: C.muted),
                       ),
                     ),
                     TextButton(
+                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4), minimumSize: const Size(0, 48)),
                       onPressed: () => open(AttendanceScreen(mealId: _m['id'])),
                       child: Text(
-                        t('Batafsil · mehmon'),
+                        t('Batafsil · mehmon qo‘shish'),
                         style: sans(13, weight: FontWeight.w700, color: C.terracotta),
                       ),
                     ),
@@ -494,7 +512,7 @@ class _NextMealCardState extends State<_NextMealCard> {
                 if (isCook || s.isAdmin)
                   SecondaryButton(
                     label: t('Navbatchi ekrani'),
-                    height: 46,
+                    height: 48,
                     onPressed: () => open(CookModeScreen(mealId: _m['id'])),
                   ),
               ],

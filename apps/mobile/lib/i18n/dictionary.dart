@@ -496,7 +496,7 @@ const ru = <String, String>{
   'Video': 'Видео',
   'Rasm qo‘shish': 'Добавить фото',
   'Rasmni almashtirish': 'Заменить фото',
-  '♥ {n} kishi saqlagan': '♥ сохранили: {n}',
+  '{n} kishi saqlagan': 'сохранили: {n}',
   'faol daq': 'мин активно',
   'passiv daq': 'мин пассивно',
   'kkal/porsiya': 'ккал/порция',
@@ -528,6 +528,28 @@ const ru = <String, String>{
   'Telefon raqamingiz, profil, vazn o‘lchovlari va sevimlilar butunlay o‘chiriladi, barcha guruhlardan chiqasiz. Guruh xarajatlari tarixi hisob-kitob buzilmasligi uchun ismsiz qoladi. Buni qaytarib bo‘lmaydi.':
       'Ваш номер телефона, профиль, замеры веса и избранное будут удалены навсегда, вы выйдете из всех групп. История расходов групп останется без имени, чтобы расчёты не нарушились. Это действие необратимо.',
   'Ha, o‘chirish': 'Да, удалить',
+  'Bugun uchun reja yo‘q': 'На сегодня плана нет',
+  'Cookbook tanlab, guruhga qo‘llang — mahallar shu yerda paydo bo‘ladi.':
+      'Выберите кукбук и примените к группе — приёмы пищи появятся здесь.',
+  '{n} porsiya · {m} a’zo + {g} mehmon': '{n} порций · {m} участн. + {g} гостей',
+  'Batafsil · mehmon qo‘shish': 'Подробнее · добавить гостя',
+  '{name} qatnashadi': '{name} участвует',
+  '{n} porsiya ({e} a’zo + {g} mehmon)': '{n} порций ({e} участн. + {g} гостей)',
+  '1 porsiya = {g} g': '1 порция = {g} г',
+  'Bugun navbatchi': 'Сегодня дежурит',
+  'Qidiruvni o‘zgartiring yoki o‘z haftalik cookbookingizni tuzing.': 'Измените запрос или составьте свой недельный кукбук.',
+  'Barcha cookbooklar': 'Все кукбуки',
+  'Yoqqan taom sahifasida yurakchani bosing — u shu yerda saqlanadi.': 'Нажмите на сердечко на странице блюда — оно сохранится здесь.',
+  'Qidiruvni o‘zgartiring yoki o‘z taomingizni qo‘shing.': 'Измените запрос или добавьте своё блюдо.',
+  'Bozordan qaytgach summani kiriting — ulushlar avtomatik hisoblanadi.':
+      'Вернувшись с рынка, введите сумму — доли посчитаются автоматически.',
+  'Zaxira bo‘sh': 'Запасов нет',
+  'Xarid ro‘yxatida “olindi” belgilangan mahsulotlar shu yerga tushadi.':
+      'Продукты, отмеченные в списке покупок как купленные, попадают сюда.',
+  'Yuqoridagi almashtirgichlar bilan oshpaz, idish yuvish yoki xarid navbatini yoqing.':
+      'Включите выше дежурство по готовке, посуде или покупкам.',
+  'Vazningizni kiriting — o‘zgarish shu yerda ko‘rinadi.': 'Введите свой вес — изменения появятся здесь.',
+  'Mahal eslatmalari va tayyorgarlik shu yerda ko‘rinadi.': 'Здесь появятся напоминания о приёмах пищи и подготовке.',
 };
 
 const en = <String, String>{
@@ -1026,7 +1048,7 @@ const en = <String, String>{
   'Video': 'Video',
   'Rasm qo‘shish': 'Add photo',
   'Rasmni almashtirish': 'Change photo',
-  '♥ {n} kishi saqlagan': '♥ saved by {n}',
+  '{n} kishi saqlagan': 'saved by {n}',
   'faol daq': 'active min',
   'passiv daq': 'passive min',
   'kkal/porsiya': 'kcal/serving',
@@ -1059,4 +1081,25 @@ const en = <String, String>{
   'Telefon raqamingiz, profil, vazn o‘lchovlari va sevimlilar butunlay o‘chiriladi, barcha guruhlardan chiqasiz. Guruh xarajatlari tarixi hisob-kitob buzilmasligi uchun ismsiz qoladi. Buni qaytarib bo‘lmaydi.':
       'Your phone number, profile, weight measurements and favourites will be permanently deleted and you will leave all groups. Group expense history stays without your name so the balances remain correct. This cannot be undone.',
   'Ha, o‘chirish': 'Yes, delete',
+  'Bugun uchun reja yo‘q': 'No plan for today',
+  'Cookbook tanlab, guruhga qo‘llang — mahallar shu yerda paydo bo‘ladi.':
+      'Pick a cookbook and apply it to the group — meals will show up here.',
+  '{n} porsiya · {m} a’zo + {g} mehmon': '{n} servings · {m} members + {g} guests',
+  'Batafsil · mehmon qo‘shish': 'Details · add a guest',
+  '{name} qatnashadi': '{name} is eating',
+  '{n} porsiya ({e} a’zo + {g} mehmon)': '{n} servings ({e} members + {g} guests)',
+  '1 porsiya = {g} g': '1 serving = {g} g',
+  'Bugun navbatchi': 'On duty today',
+  'Qidiruvni o‘zgartiring yoki o‘z haftalik cookbookingizni tuzing.': 'Change the search or build your own weekly cookbook.',
+  'Barcha cookbooklar': 'All cookbooks',
+  'Yoqqan taom sahifasida yurakchani bosing — u shu yerda saqlanadi.': 'Tap the heart on a dish page and it will be saved here.',
+  'Qidiruvni o‘zgartiring yoki o‘z taomingizni qo‘shing.': 'Change the search or add your own dish.',
+  'Bozordan qaytgach summani kiriting — ulushlar avtomatik hisoblanadi.':
+      'Enter the amount after shopping and the shares are calculated automatically.',
+  'Zaxira bo‘sh': 'The pantry is empty',
+  'Xarid ro‘yxatida “olindi” belgilangan mahsulotlar shu yerga tushadi.': 'Items marked as bought in the shopping list end up here.',
+  'Yuqoridagi almashtirgichlar bilan oshpaz, idish yuvish yoki xarid navbatini yoqing.':
+      'Turn on the cooking, dishes or shopping rota with the switches above.',
+  'Vazningizni kiriting — o‘zgarish shu yerda ko‘rinadi.': 'Enter your weight and the changes will show up here.',
+  'Mahal eslatmalari va tayyorgarlik shu yerda ko‘rinadi.': 'Meal reminders and prep notes will show up here.',
 };

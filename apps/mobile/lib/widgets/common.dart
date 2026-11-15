@@ -72,13 +72,20 @@ class CircleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final btn = Material(
-      color: filled ? C.terracotta : C.card,
-      shape: CircleBorder(side: filled ? BorderSide.none : const BorderSide(color: C.line)),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox.square(dimension: 44, child: Icon(icon, size: 22, color: iconColor ?? (filled ? Colors.white : C.ink))),
+    // Ko'rinadigan doira 44 px (dizayn), bosiladigan joy 48 px
+    final btn = SizedBox.square(
+      dimension: 48,
+      child: Center(
+        child: Material(
+          color: filled ? C.terracotta : C.card,
+          shape: CircleBorder(side: filled ? BorderSide.none : const BorderSide(color: C.line)),
+          child: InkResponse(
+            radius: 26,
+            containedInkWell: false,
+            onTap: onTap,
+            child: SizedBox.square(dimension: 44, child: Icon(icon, size: 22, color: iconColor ?? (filled ? Colors.white : C.ink))),
+          ),
+        ),
       ),
     );
     return tooltip == null
@@ -199,10 +206,15 @@ class CardList extends StatelessWidget {
   Widget build(BuildContext context) => AppCard(
     padding: EdgeInsets.zero,
     radius: radius,
-    child: Column(
-      children: [
-        for (var i = 0; i < children.length; i++) ...[if (i > 0) const Divider(height: 1, thickness: 1, color: C.lineSoft), children[i]],
-      ],
+    child: AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      alignment: Alignment.topCenter,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[if (i > 0) const Divider(height: 1, thickness: 1, color: C.lineSoft), children[i]],
+        ],
+      ),
     ),
   );
 }
@@ -235,26 +247,37 @@ class ChoicePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Chip balandligi dizayndagidek (36), bosiladigan joy esa 48 px
     final w = Semantics(
       selected: selected,
       button: true,
-      child: Material(
-        color: selected ? C.ink : Colors.transparent,
-        shape: StadiumBorder(side: BorderSide(color: selected ? C.ink : C.border, width: 1.5)),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            height: height,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              // widthFactor: 1 — Wrap/Row ichida matn kengligicha qoladi
-              child: Center(
-                widthFactor: 1,
-                child: Text(
-                  label,
-                  style: sans(13, weight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? C.card : C.ink),
-                ),
+      child: InkResponse(
+        onTap: onTap,
+        radius: 28,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: height < 48 ? 48 : height),
+          child: Center(
+            widthFactor: 1,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              constraints: BoxConstraints(minHeight: height),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: ShapeDecoration(
+                color: selected ? C.ink : Colors.transparent,
+                shape: StadiumBorder(side: BorderSide(color: selected ? C.ink : C.border, width: 1.5)),
+              ),
+              child: Row(
+                mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: sans(13, weight: selected ? FontWeight.w700 : FontWeight.w600, color: selected ? C.card : C.ink),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -276,32 +299,39 @@ class Segmented<T> extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(4),
     decoration: BoxDecoration(color: C.lineSoft, borderRadius: BorderRadius.circular(14)),
-    child: Row(
-      children: [
-        for (final e in items.entries)
-          Expanded(
-            child: Semantics(
-              selected: e.key == value,
-              button: true,
-              child: GestureDetector(
-                onTap: () => onChanged(e.key),
-                child: Container(
-                  height: 42,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: e.key == value ? C.card : Colors.transparent,
-                    borderRadius: BorderRadius.circular(11),
-                    boxShadow: e.key == value ? const [BoxShadow(color: Color(0x1F2B2019), blurRadius: 3, offset: Offset(0, 1))] : null,
-                  ),
-                  child: Text(
-                    e.value,
-                    style: sans(14, weight: e.key == value ? FontWeight.w700 : FontWeight.w600, color: e.key == value ? C.ink : C.muted),
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final e in items.entries)
+            Expanded(
+              child: Semantics(
+                selected: e.key == value,
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onChanged(e.key),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    constraints: const BoxConstraints(minHeight: 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: e.key == value ? C.card : Colors.transparent,
+                      borderRadius: BorderRadius.circular(11),
+                      boxShadow: e.key == value ? const [BoxShadow(color: Color(0x1F2B2019), blurRadius: 3, offset: Offset(0, 1))] : null,
+                    ),
+                    child: Text(
+                      e.value,
+                      textAlign: TextAlign.center,
+                      style: sans(13, weight: e.key == value ? FontWeight.w700 : FontWeight.w600, color: e.key == value ? C.ink : C.muted),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     ),
   );
 }
@@ -332,7 +362,10 @@ class Avatar extends StatelessWidget {
 
 /// Taom rasmi; rasm bo'lmasa — taomga xos rangdagi naqshli zaxira ko'rinish (dasturxon ustidagi lagan)
 class DishImage extends StatelessWidget {
-  const DishImage({super.key, this.url, this.width, this.height, this.radius = 12, this.seed = ''});
+  const DishImage({super.key, this.url, this.width, this.height, this.radius = 12, this.seed = '', this.showIcon = true});
+
+  /// Zaxira ko'rinishda markaziy ikonka (ustiga video tugmasi qo'yilsa — o'chiriladi)
+  final bool showIcon;
   final String? url;
   final double? width;
   final double? height;
@@ -360,6 +393,7 @@ class DishImage extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, c) {
             final side = c.biggest.shortestSide.isFinite ? c.biggest.shortestSide : (height ?? 52);
+            if (!showIcon) return const SizedBox.expand();
             return Center(
               child: Icon(Icons.restaurant_rounded, color: tone.$3.withValues(alpha: .7), size: (side * .38).clamp(16, 52)),
             );
@@ -428,7 +462,7 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+    crossAxisAlignment: trailing is Text ? CrossAxisAlignment.end : CrossAxisAlignment.center,
     children: [
       Expanded(
         child: Text(text, style: sans(16, weight: FontWeight.w800)),
@@ -465,7 +499,7 @@ class Counter extends StatelessWidget {
   );
 
   Widget _btn(IconData icon, VoidCallback? onTap, bool primary, String tip) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
+    padding: const EdgeInsets.all(2),
     child: Tooltip(
       message: tip,
       child: Semantics(
@@ -546,7 +580,7 @@ class ErrorView extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: 200,
-            child: SecondaryButton(label: t('Qayta urinish'), onPressed: onRetry, height: 46),
+            child: SecondaryButton(label: t('Qayta urinish'), onPressed: onRetry, height: 48),
           ),
         ],
       ),
@@ -602,7 +636,9 @@ class InfoBanner extends StatelessWidget {
     this.icon = Icons.info_outline_rounded,
     this.bg = C.mustardSoft,
     this.fg = C.mustardInk,
+    this.bold = false,
   });
+  final bool bold;
   final String? title;
   final String text;
   final IconData icon;
@@ -627,7 +663,10 @@ class InfoBanner extends StatelessWidget {
                   title!,
                   style: sans(14, weight: FontWeight.w700, color: fg),
                 ),
-              Text(text, style: sans(13, color: fg, height: 1.45)),
+              Text(
+                text,
+                style: sans(13, weight: bold ? FontWeight.w700 : FontWeight.w500, color: fg, height: 1.45),
+              ),
             ],
           ),
         ),
@@ -743,7 +782,22 @@ Future<bool> confirm(BuildContext context, String text, {String? ok}) async =>
     ) ??
     false;
 
-Route<T> route<T>(Widget page) => MaterialPageRoute<T>(builder: (_) => page);
+/// Sahifa o'tishi: yengil so'nish + pastdan ozgina siljish (hamma ekranda bir xil)
+Route<T> route<T>(Widget page) => PageRouteBuilder<T>(
+  pageBuilder: (_, _, _) => page,
+  transitionDuration: const Duration(milliseconds: 220),
+  reverseTransitionDuration: const Duration(milliseconds: 180),
+  transitionsBuilder: (_, animation, _, child) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, .04), end: Offset.zero).animate(curved),
+        child: child,
+      ),
+    );
+  },
+);
 
 /// Bo'lim yorlig'i: kichik, bosh harflar bilan (xarid kategoriyalari, ro'yxat bo'limlari)
 class SectionLabel extends StatelessWidget {
@@ -993,4 +1047,170 @@ class BottomBar extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Almashtirgich (52×32, zaytun rang) — dizayndagi "Kim yeydi" qatorlari uchun; bosiladigan joy 48 px
+class AppSwitch extends StatelessWidget {
+  const AppSwitch({super.key, required this.value, required this.onChanged, this.label});
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    toggled: value,
+    label: label,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onChanged == null ? null : () => onChanged!(!value),
+      child: SizedBox(
+        width: 56,
+        height: 48,
+        child: Center(
+          child: Opacity(
+            opacity: onChanged == null ? .5 : 1,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: 52,
+              height: 32,
+              padding: const EdgeInsets.all(3),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              decoration: BoxDecoration(color: value ? C.olive : C.border, borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Color(0x332B2019), blurRadius: 2, offset: Offset(0, 1))],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Tezkor havola plitkasi (Bugun va Guruh ekranlaridagi 2×2 to'r): nom + ixtiyoriy izoh
+class QuickTile extends StatelessWidget {
+  const QuickTile(this.title, {super.key, this.sub, required this.onTap, this.subColor = C.muted, this.icon});
+  final String title;
+  final String? sub;
+  final VoidCallback onTap;
+  final Color subColor;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+    onTap: onTap,
+    radius: 16,
+    padding: const EdgeInsets.all(14),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 36),
+      child: Row(
+        children: [
+          if (icon != null) ...[Icon(icon, size: 20, color: C.terracotta), const SizedBox(width: 10)],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title, style: sans(14, weight: FontWeight.w700)),
+                if (sub != null && sub!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    sub!,
+                    style: sans(12, weight: FontWeight.w700, color: subColor),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Plitkalar to'ri: 2 ustun, qatordagi plitkalar bir xil balandlikda (matn uzun bo'lsa o'sadi, kesilmaydi)
+class TileGrid extends StatelessWidget {
+  const TileGrid({super.key, required this.children, this.gap = 10});
+  final List<Widget> children;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (var i = 0; i < children.length; i += 2) ...[
+        if (i > 0) SizedBox(height: gap),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: children[i]),
+              SizedBox(width: gap),
+              Expanded(child: i + 1 < children.length ? children[i + 1] : const SizedBox()),
+            ],
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
+/// Ro'yxatga qo'shilgan element yumshoq paydo bo'ladi (so'nish + balandlik)
+class FadeIn extends StatelessWidget {
+  const FadeIn({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0, end: 1),
+    duration: const Duration(milliseconds: 220),
+    curve: Curves.easeOut,
+    builder: (context, v, child) => Opacity(
+      opacity: v,
+      child: Align(alignment: Alignment.topCenter, heightFactor: v, child: child),
+    ),
+    child: child,
+  );
+}
+
+/// Punktir ramkali kartochka ("ovqatdan keyin" kabi ixtiyoriy bo'limlar)
+class DashedCard extends StatelessWidget {
+  const DashedCard({super.key, required this.child, this.padding = const EdgeInsets.all(14)});
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    foregroundPainter: _DashedBorderPainter(),
+    child: Container(
+      padding: padding,
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(18)),
+      child: child,
+    ),
+  );
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFC9B49B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final path = Path()..addRRect(RRect.fromRectAndRadius((Offset.zero & size).deflate(.75), const Radius.circular(18)));
+    // Yo'l bo'ylab 6 px chiziq, 4 px bo'shliq
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 10) {
+        canvas.drawPath(metric.extractPath(d, d + 6), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) => false;
 }

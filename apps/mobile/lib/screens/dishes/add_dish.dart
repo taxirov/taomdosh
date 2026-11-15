@@ -153,7 +153,7 @@ class _AddDishScreenState extends State<AddDishScreen> {
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               children: [
                 ScreenHeader(title: _editing ? t('Taomni tahrirlash') : t('Taom qo‘shish'), close: true, big: false),
                 const SizedBox(height: 16),

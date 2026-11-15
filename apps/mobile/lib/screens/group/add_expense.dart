@@ -58,7 +58,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                 children: [
                   ScreenHeader(title: t('Xarajat kiritish'), close: true, big: false),
                   const SizedBox(height: 20),

@@ -114,7 +114,7 @@ class _CookbookEditorScreenState extends State<CookbookEditorScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                 children: [
                   ScreenHeader(title: widget.edit != null ? t('Cookbookni tahrirlash') : t('Yangi cookbook'), close: true, big: false),
                   const SizedBox(height: 16),

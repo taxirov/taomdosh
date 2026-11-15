@@ -115,13 +115,16 @@ class _CookBodyState extends State<_CookBody> {
         .where((a) => a['status'] == 'not_eating')
         .map((a) => a['name'])
         .toList();
+    // Standart porsiya og'irligi va har kimning koeffitsiyenti (0,85 / 1 / 1,4)
+    final totalServings = (d['totalServings'] as num?) ?? 0;
+    final perServing = totalServings > 0 ? ((d['totalGrams'] as num) / totalServings).round() : 0;
     String timer(Duration d) {
       if (d.isNegative) return '0:00:00';
       return '${d.inHours}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       children: [
         Row(
           children: [
@@ -140,7 +143,7 @@ class _CookBodyState extends State<_CookBody> {
           style: sans(13, weight: FontWeight.w700, color: C.terracottaDark),
         ),
         const SizedBox(height: 4),
-        Text(t('{dish} — {n} porsiya', {'dish': main['title'], 'n': dec(main['totalServings'] as num)}), style: serif(28, height: 1.1)),
+        Text(t('{dish} — {n} porsiya', {'dish': main['title'], 'n': dec(main['totalServings'] as num)}), style: serif(30, height: 1.1)),
         const SizedBox(height: 4),
         Text(
           [
@@ -199,28 +202,24 @@ class _CookBodyState extends State<_CookBody> {
         CardList(
           children: [
             for (final i in (d['ingredients'] as List).cast<Json>())
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(i['name'], style: sans(14, weight: FontWeight.w600)),
-                    ),
-                    Text(
-                      i['market']?['unit'] == 'pcs'
-                          ? '${displayQty(i['market'])} · ${i['qtyG']} g'
-                          : recipeQty(i['displayQty'], i['displayUnit'], i['qtyG']),
-                      style: sans(14, weight: FontWeight.w800),
-                    ),
-                  ],
-                ),
+              KeyValueRow(
+                i['name'],
+                // Dona bilan o'lchanadiganlar: "2 dona · 220 g"
+                i['market']?['unit'] == 'pcs'
+                    ? '${displayQty(i['market'])} · ${i['qtyG']} g'
+                    : recipeQty(i['displayQty'], i['displayUnit'], i['qtyG']),
               ),
           ],
         ),
         const SizedBox(height: 20),
         SectionTitle(
           t('Kimga qancha suzish kerak'),
-          trailing: Text(t('jami {g} g', {'g': groupDigits(d['totalGrams'] as num)}), style: sans(12, color: C.muted)),
+          trailing: Text(
+            perServing > 0
+                ? t('1 porsiya = {g} g', {'g': groupDigits(perServing)})
+                : t('jami {g} g', {'g': groupDigits(d['totalGrams'] as num)}),
+            style: sans(12, color: C.muted),
+          ),
         ),
         const SizedBox(height: 10),
         CardList(
@@ -248,7 +247,15 @@ class _CookBodyState extends State<_CookBody> {
                         ],
                       ),
                     ),
-                    Text('${groupDigits(p['grams'] as num)} g', style: sans(17, weight: FontWeight.w800)),
+                    if (perServing > 0) ...[_FactorChip((p['grams'] as num) / perServing), const SizedBox(width: 10)],
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 64),
+                      child: Text(
+                        '${groupDigits(p['grams'] as num)} g',
+                        textAlign: TextAlign.end,
+                        style: sans(17, weight: FontWeight.w800),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -261,13 +268,7 @@ class _CookBodyState extends State<_CookBody> {
         ),
         if (isFinal && ate) ...[
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: C.card,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFC9B49B), width: 1.5),
-            ),
+          DashedCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -279,7 +280,7 @@ class _CookBodyState extends State<_CookBody> {
                       if (e.key != 'too_much') const SizedBox(width: 6),
                       Expanded(
                         child: SizedBox(
-                          height: 44,
+                          height: 48,
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -313,16 +314,7 @@ class _CookBodyState extends State<_CookBody> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: st['n'] == 1 ? C.terracotta : C.lineSoft, shape: BoxShape.circle),
-                  child: Text(
-                    '${st['n']}',
-                    style: sans(13, weight: FontWeight.w800, color: st['n'] == 1 ? Colors.white : C.ink),
-                  ),
-                ),
+                StepBadge('${st['n']}', active: st['n'] == 1),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(st['text'], style: sans(14, weight: FontWeight.w600, height: 1.4)),
@@ -340,6 +332,31 @@ class _CookBodyState extends State<_CookBody> {
           onPressed: () => Navigator.of(context).push(route(DishPage(dishId: d['dishId']))),
         ),
       ],
+    );
+  }
+}
+
+/// Porsiya koeffitsiyenti: standartdan kam — terrakota, ko'p — zaytun, teng — neytral
+class _FactorChip extends StatelessWidget {
+  const _FactorChip(this.k);
+  final double k;
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = k < .95
+        ? (C.terracottaSoft, C.terracottaDark)
+        : k > 1.05
+        ? (C.oliveSoft, C.oliveInk)
+        : (C.lineSoft, C.ink);
+    return Container(
+      constraints: const BoxConstraints(minWidth: 46),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      child: Text(
+        dec(k, 2),
+        textAlign: TextAlign.center,
+        style: sans(13, weight: FontWeight.w800, color: fg),
+      ),
     );
   }
 }

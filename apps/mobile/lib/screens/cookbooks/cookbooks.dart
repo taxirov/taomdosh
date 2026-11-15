@@ -40,7 +40,7 @@ class _CookbooksScreenState extends State<CookbooksScreen> {
           return RefreshIndicator(
             onRefresh: reload,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               children: [
                 Row(
                   children: [
@@ -73,8 +73,20 @@ class _CookbooksScreenState extends State<CookbooksScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (list.isEmpty) EmptyView(text: t('Hech narsa topilmadi')),
-                for (final (i, c) in list.indexed)
+                if (list.isEmpty)
+                  EmptyView(
+                    icon: Icons.menu_book_outlined,
+                    title: t('Hech narsa topilmadi'),
+                    text: t('Qidiruvni o‘zgartiring yoki o‘z haftalik cookbookingizni tuzing.'),
+                    action: SizedBox(
+                      width: 220,
+                      child: SecondaryButton(label: t('Yangi cookbook'), height: 48, onPressed: () => open(const CookbookEditorScreen())),
+                    ),
+                  ),
+                for (final (i, c) in list.indexed) ...[
+                  // Birinchi (tavsiya etilgan) kartochkadan keyin qolganlari bo'lim sarlavhasi bilan
+                  if (i == 1 && _q.isEmpty && _filter == 'all')
+                    Padding(padding: const EdgeInsets.only(top: 6, bottom: 10), child: SectionTitle(t('Barcha cookbooklar'))),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: i == 0 && _q.isEmpty && _filter == 'all'
@@ -87,6 +99,7 @@ class _CookbooksScreenState extends State<CookbooksScreen> {
                             onTap: () => open(CookbookDetailScreen(id: c['id'])),
                           ),
                   ),
+                ],
               ],
             ),
           );
@@ -168,7 +181,12 @@ class _Row extends StatelessWidget {
             ],
           ),
         ),
-        if (c['moderationStatus'] == 'pending') Pill(t('Moderatsiyada'), bg: C.mustardSoft, fg: C.mustardInk) else Pill(t('Bepul')),
+        const SizedBox(width: 8),
+        switch (c['moderationStatus']) {
+          'pending' => Pill(t('Moderatsiyada'), bg: C.mustardSoft, fg: C.mustardInk),
+          'rejected' => Pill(t('Shaxsiy'), bg: C.lineSoft, fg: C.muted),
+          _ => Pill(t('Bepul')),
+        },
       ],
     ),
   );

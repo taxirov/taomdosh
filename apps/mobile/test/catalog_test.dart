@@ -66,7 +66,7 @@ void main() {
       routes: {'GET /dishes/d1': dish(videoUrl: 'https://youtu.be/abc123')},
     );
     expect(find.text('Samarqand oshi'), findsOneWidget);
-    expect(find.text('♥ 12 450 kishi saqlagan'), findsOneWidget);
+    expect(find.text('12 450 kishi saqlagan'), findsOneWidget);
     expect(find.text('680'), findsOneWidget);
     expect(find.text('kkal/porsiya'), findsOneWidget);
     expect(find.text('600 g'), findsOneWidget);

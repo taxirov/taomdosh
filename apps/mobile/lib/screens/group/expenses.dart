@@ -71,7 +71,7 @@ class _Body extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: reload,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           ScreenHeader(
             title: t('Xarajatlar'),
@@ -173,7 +173,19 @@ class _Body extends StatelessWidget {
           SectionTitle(t('Oxirgi xarajatlar')),
           const SizedBox(height: 10),
           if (expenses.isEmpty)
-            EmptyView(text: t('Hali xarajat kiritilmagan'))
+            EmptyView(
+              icon: Icons.receipt_long_outlined,
+              title: t('Hali xarajat kiritilmagan'),
+              text: t('Bozordan qaytgach summani kiriting — ulushlar avtomatik hisoblanadi.'),
+              action: SizedBox(
+                width: 220,
+                child: SecondaryButton(
+                  label: t('Xarajat kiritish'),
+                  height: 48,
+                  onPressed: () => Navigator.of(context).push(route(const AddExpenseScreen())).then((_) => reload()),
+                ),
+              ),
+            )
           else
             CardList(
               children: [

@@ -71,12 +71,16 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
           children: [
             ScreenHeader(title: t('Bildirishnomalar')),
             const SizedBox(height: 16),
             if (items.isEmpty)
-              EmptyView(icon: Icons.notifications_none_rounded, text: t('Hozircha yangi narsa yo‘q'))
+              EmptyView(
+                icon: Icons.notifications_none_rounded,
+                title: t('Hozircha yangi narsa yo‘q'),
+                text: t('Mahal eslatmalari va tayyorgarlik shu yerda ko‘rinadi.'),
+              )
             else
               CardList(children: items),
           ],

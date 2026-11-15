@@ -381,59 +381,65 @@ class _ShoppingRow extends StatelessWidget {
     final done = item['status'] == 'bought';
     final cost = item['estCost'] as num?;
     final fg = done ? C.navMuted : C.ink;
-    return InkWell(
-      onTap: done ? null : onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 56),
-        child: Padding(
-          padding: const EdgeInsets.only(right: 14),
-          child: Row(
-            children: [
-              CheckMark(checked: done, onTap: done ? null : onCheck, label: item['name'] as String),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item['name'] as String,
-                        style: sans(15, weight: FontWeight.w600, color: fg).copyWith(decoration: done ? TextDecoration.lineThrough : null),
-                      ),
-                      if (!done && cost != null)
+    return FadeIn(
+      child: InkWell(
+        onTap: done ? null : onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Row(
+              children: [
+                CheckMark(checked: done, onTap: done ? null : onCheck, label: item['name'] as String),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          '~${money(cost)}${item['priceSource'] == 'group' ? ' · ${t('o‘z narximiz')}' : ''}',
-                          style: sans(12, color: C.muted),
+                          item['name'] as String,
+                          style: sans(
+                            15,
+                            weight: FontWeight.w600,
+                            color: fg,
+                          ).copyWith(decoration: done ? TextDecoration.lineThrough : null),
                         ),
-                      if (!done && cost == null)
-                        InkWell(
-                          onTap: onPrice,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Text(
-                              t('Narx kiritish'),
-                              style: sans(12, weight: FontWeight.w700, color: C.terracotta),
+                        if (!done && cost != null)
+                          Text(
+                            '~${money(cost)}${item['priceSource'] == 'group' ? ' · ${t('o‘z narximiz')}' : ''}',
+                            style: sans(12, color: C.muted),
+                          ),
+                        if (!done && cost == null)
+                          InkWell(
+                            onTap: onPrice,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Text(
+                                t('Narx kiritish'),
+                                style: sans(12, weight: FontWeight.w700, color: C.terracotta),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                displayQty(item['display']),
-                style: sans(14, weight: FontWeight.w800, color: fg),
-              ),
-              if (item['isManual'] == true) ...[const SizedBox(width: 6), const Icon(Icons.edit_note_rounded, size: 18, color: C.muted)],
-              if (item['assigneeId'] != null) ...[
-                const SizedBox(width: 10),
-                Tooltip(
-                  message: t('{name} oladi', {'name': item['assigneeName'] ?? ''}),
-                  child: Avatar(name: item['assigneeName'] ?? '?', id: item['assigneeId'], size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  displayQty(item['display']),
+                  style: sans(14, weight: FontWeight.w800, color: fg),
                 ),
+                if (item['isManual'] == true) ...[const SizedBox(width: 6), const Icon(Icons.edit_note_rounded, size: 18, color: C.muted)],
+                if (item['assigneeId'] != null) ...[
+                  const SizedBox(width: 10),
+                  Tooltip(
+                    message: t('{name} oladi', {'name': item['assigneeName'] ?? ''}),
+                    child: Avatar(name: item['assigneeName'] ?? '?', id: item['assigneeId'], size: 28),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
