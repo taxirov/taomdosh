@@ -54,3 +54,6 @@ APK: GitHub **Actions → mobile → Artifacts**. Batafsil: [apps/mobile/README.
 ## Serverga joylash
 
 `docker-compose.yml` (api, postgres, redis, caddy HTTPS) — yo'riqnoma: [deploy/README.md](deploy/README.md).
+
+`.env` dagi qo'shimcha sozlamalar: `PRICES_SYNC_ENABLED` (kunlik narxlar, standart `on`), `ADMIN_PHONES`
+(moderatsiya va narx faylini yuklash huquqi). Taom rasmlari `uploads` volume'ida saqlanadi.

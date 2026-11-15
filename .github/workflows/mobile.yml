@@ -7,6 +7,11 @@ on:
   pull_request:
     paths: ['apps/mobile/**', '.github/workflows/mobile.yml']
   workflow_dispatch:
+    inputs:
+      api_url:
+        description: "API manzili (masalan https://taomdosh.jprq.app/v1). Bo'sh — repo o'zgaruvchisi API_URL"
+        required: false
+        default: ''
 
 defaults:
   run:
@@ -46,8 +51,16 @@ jobs:
           echo "$KEYSTORE" | base64 -d > android/app/upload.jks
           printf 'storeFile=upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
 
-      # API manzili: repo Settings → Variables → API_URL (masalan, https://api.taomdosh.uz/v1)
-      - run: flutter build apk --release --dart-define=API_URL=${{ vars.API_URL || 'https://api.taomdosh.uz/v1' }}
+      # API manzili (ustuvorlik): qo'lda ishga tushirishdagi api_url → repo Settings → Variables → API_URL →
+      # standart https://taomdosh.jprq.app/v1 (uy serveri: deploy/setup.sh MODE=jprq JPRQ_NAME=taomdosh).
+      # jprq subdomeni boshqacha bo'lsa — API_URL o'zgaruvchisini https://<subdomen>.jprq.app/v1 qilib qo'ying.
+      # Ilovada ham Profil → "Server manzili" orqali o'zgartirish mumkin (qayta yig'ish shart emas).
+      - name: APK yig'ish
+        env:
+          API_URL: ${{ inputs.api_url || vars.API_URL || 'https://taomdosh.jprq.app/v1' }}
+        run: |
+          echo "API_URL=$API_URL"
+          flutter build apk --release --dart-define=API_URL="$API_URL"
       - uses: actions/upload-artifact@v4
         with:
           name: taomdosh-apk
