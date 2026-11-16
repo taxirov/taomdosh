@@ -28,6 +28,8 @@ To'liq dizayn: claude.ai dagi "Taomdosh — System design va Database dizayn" hu
   prices ✅ (`price-source.ts` — manba adapterlari: API va Excel; `prices.module.ts` — kunlik sinxronlash, `GET /prices`, guruh narxlari, admin import).
 - Katalog: `PATCH/DELETE /dishes/:id`, `/cookbooks/:id` (muallif yoki admin), `POST/DELETE /dishes/:id/image`, moderatsiya `GET /admin/moderation`, `POST /admin/moderation/{dishes|cookbooks}/:id/{approve|reject}`.
 - Profil: `DELETE /me` — hisobni o'chirish (`UsersService.deleteAccount`).
+- Admin: `modules/admin/admin.module.ts` (`/admin/stats|users|groups|dishes|cookbooks|ingredients|prices`), har amal `requireAdmin`. Foydalanuvchini bloklash refresh tokenlarini bekor qiladi (access ko'pi bilan 15 daqiqa); admin o'zini o'zgartira olmaydi; sog'liq ma'lumotlari javobga kirmaydi. Masalliq kaloriyasi o'zgarsa, u ishlatilgan taomlarning `kcal_per_serving` qayta hisoblanadi. Admin (muallif bo'lmagan) taomni tahrirlasa moderatsiya holati o'zgarmaydi. Test: `test/admin.e2e-spec.ts`.
+- Admin panel statik fayllari: `common/admin-static.ts` — `/admin/` (SPA, `ADMIN_DIR` → `../admin/dist` → `./admin`); Docker obrazi `adminsrc` qo'shimcha konteksti bilan yig'iladi (compose `additional_contexts`, CI `build-contexts`).
 - `src/db/seed` — 134 masalliq, 46 taom (uz/ru/en), 3 cookbook, 35 ta masalliq↔narx bog'lanishi (`data/price-links.ts`); `npm run db:seed` qayta ishga tushirishga xavfsiz.
 - `test/*.e2e-spec.ts` — `flow` (to'liq oqim), `prices`, `catalog`, `account` (`npm run test:e2e`, haqiqiy Postgres + Redis + seed kerak). Testlar tashqi saytga chiqmaydi: narx manbasi `PRICE_SOURCE` provayderi soxta adapter bilan almashtiriladi (`test/fixtures/prices-api.json`).
 - Poller: `MEAL_LOCK_POLLER=off` uni o'chiradi (e2e testda `MealsService.lockDue(now)` qo'lda chaqiriladi).
@@ -50,6 +52,12 @@ To'liq dizayn: claude.ai dagi "Taomdosh — System design va Database dizayn" hu
 5. ✅ e2e test (`test/`): kirish → guruh → cookbook qo'llash → qatnashuv → qulflash → xarid → xarajat → qarzlar.
 6. ✅ `Dockerfile` + `docker-compose.yml` (api, postgres, redis, caddy HTTPS) va DigitalOcean'ga joylash yo'riqnomasi (`deploy/README.md`).
 7. ✅ **Flutter ilova** (`apps/mobile`) — "Taomdosh UI" dizaynidagi MVP ekranlari (oshpaz/kurs/stories keyingi bosqichda); terrakota/krem/xantal palitrasi.
+
+## Tuzilish (apps/admin)
+- Veb admin panel: React 19 + Vite + react-router, `base: '/admin/'`; tashqi UI kutubxonasi yo'q (`src/ui.tsx` — umumiy komponentlar, `src/styles.css` — mobil ilova palitrasi va shriftlari).
+- `src/api.ts` — fetch + token (localStorage) + refresh, xato kodlari → o'zbekcha matn; `src/pages/*` — Bosh sahifa, Moderatsiya, Taomlar, Cookbooklar, Masalliqlar, Narxlar, Foydalanuvchilar, Guruhlar, Kirish (@taomdosh_bot yoki telefon + kod).
+- Interfeys faqat o'zbekcha (lotin). Narx manbasi nomi panelda ham ko'rsatilmaydi ("Avtomatik"/"Excel").
+- Tekshiruv: `npm run build` (tsc + vite). CI: `.github/workflows/api.yml` → `admin` job.
 
 ## Tuzilish (apps/mobile)
 - `lib/api/api_client.dart` — HTTP + refresh, `upload()` (multipart), `mediaUrl()`; `API_URL` `--dart-define` orqali (standart `http://10.0.2.2:3000/v1`), foydalanuvchi Profil → "Server manzili" da o'zgartira oladi (`currentApiBase`, `normalizeServerUrl`).

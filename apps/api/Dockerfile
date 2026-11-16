@@ -1,5 +1,13 @@
 # Taomdosh API — ishlab chiqarish obrazi (hostingga bog'lanmagan: DigitalOcean, UzCloud yoki istalgan Docker serveri)
 
+# ─── 0. Admin panel (apps/admin) — qo'shimcha kontekst "admin" (compose: additional_contexts, CI: build-contexts) ───
+FROM node:22-alpine AS admin
+WORKDIR /admin
+COPY --from=adminsrc package.json package-lock.json ./
+RUN npm ci
+COPY --from=adminsrc . .
+RUN npm run build
+
 # ─── 1. Yig'ish ───
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -17,6 +25,9 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY drizzle ./drizzle
+# Admin panel API bilan bitta portda: /admin/
+COPY --from=admin /admin/dist ./admin
+ENV ADMIN_DIR=/app/admin
 # Yuklangan rasmlar papkasi (compose'da volume ulanadi); node foydalanuvchisi yoza olishi kerak
 ENV UPLOADS_DIR=/data/uploads
 RUN mkdir -p /data/uploads && chown -R node:node /data

@@ -4,7 +4,10 @@ services:
   api:
     # API_IMAGE berilsa — tayyor obraz yuklanadi (ghcr.io), aks holda shu yerda yig'iladi
     image: ${API_IMAGE:-taomdosh-api}
-    build: ./apps/api
+    build:
+      context: ./apps/api
+      additional_contexts:
+        adminsrc: ./apps/admin
     restart: unless-stopped
     environment:
       NODE_ENV: production

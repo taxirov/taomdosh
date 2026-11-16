@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { sql } from 'drizzle-orm';
 import { JwtAuthGuard, Public } from './common/auth';
 import { Db, InfraModule, InjectDb } from './common/infra.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { GroupsModule } from './modules/groups/groups.module';
@@ -44,6 +45,7 @@ class HealthController {
     ShoppingModule,
     ExpensesModule,
     PricesModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],

@@ -36,7 +36,7 @@ API obrazi GitHub Actions'da yig'ilib `ghcr.io/taxirov/taomdosh-api` ga qo'yilad
 (obraz yopiq bo'lsa, skript o'zi yig'adi; tezlik uchun GitHub → Packages → taomdosh-api → visibility: **Public**).
 
 Qo'shimcha sozlamalar (`/opt/taomdosh/.env`, o'zgartirgach `docker compose up -d`):
-- `ADMIN_PHONES=+998901234567` — platforma admini: ilovada "Moderatsiya" ekrani va narx faylini qo'lda yuklash;
+- `ADMIN_PHONES=+998901234567` — platforma admini: veb admin panel (`https://<domen>/admin/`), ilovada "Moderatsiya" ekrani va narx faylini qo'lda yuklash;
 - `PRICES_SYNC_ENABLED=off` — kunlik narx yangilashni o'chirish (standart: yoqilgan, har kuni 08:00).
 
 Taom rasmlari `uploads` Docker volume'ida turadi (konteyner yangilanganda saqlanadi). Kechki zaxira nusxa faqat

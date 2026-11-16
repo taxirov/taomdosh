@@ -340,7 +340,9 @@ export class CatalogService {
       patch.moderationStatus = 'approved';
     }
     const contentChanged = !!(dto.title || dto.description !== undefined || dto.ingredients || dto.steps || video !== undefined);
-    if (d.visibility === 'public' && d.authorId && contentChanged && dto.submitPublic !== false) patch.moderationStatus = 'pending';
+    // Muallif o'zgartirsa — qayta moderatsiya; platforma admini tahriri (muallif bo'lmasa) holatni o'zgartirmaydi
+    const byAdmin = d.authorId !== userId;
+    if (d.visibility === 'public' && d.authorId && contentChanged && dto.submitPublic !== false && !byAdmin) patch.moderationStatus = 'pending';
 
     await this.db.transaction(async (tx) => {
       if (dto.ingredients) {
