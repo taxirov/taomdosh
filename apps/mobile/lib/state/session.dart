@@ -126,6 +126,29 @@ class Session extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Hisobni butunlay o'chirish (serverda shaxsiy ma'lumotlar tozalanadi), so'ng kirish ekraniga
+  Future<void> deleteAccount() async {
+    await api.delete('/me');
+    await _reset();
+  }
+
+  /// Server manzilini almashtirish: boshqa server — boshqa hisob, shuning uchun qayta kirish kerak
+  Future<void> setServerUrl(String? url) async {
+    await api.setServerUrl(url);
+    await _reset();
+  }
+
+  Future<void> _reset() async {
+    final p = await SharedPreferences.getInstance();
+    await api.clearTokens();
+    await p.remove(_kGroup);
+    me = null;
+    group = null;
+    groups = [];
+    offline = false;
+    notifyListeners();
+  }
+
   // ─────────── profil ───────────
 
   Future<void> loadMe() async {

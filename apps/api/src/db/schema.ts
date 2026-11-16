@@ -68,6 +68,8 @@ export const feedbackVerdict = pgEnum('feedback_verdict', ['too_much', 'enough',
 export const pantryReason = pgEnum('pantry_reason', ['purchase', 'cooking', 'manual', 'return']);
 export const shoppingStatus = pgEnum('shopping_status', ['pending', 'bought', 'skipped']);
 export const expenseCategory = pgEnum('expense_category', ['groceries', 'utilities', 'other']);
+export const userRole = pgEnum('user_role', ['user', 'admin']); // platforma darajasidagi rol (moderatsiya, narx yuklash)
+export const priceSyncStatus = pgEnum('price_sync_status', ['ok', 'retry', 'failed']);
 
 export type MealType = (typeof mealType.enumValues)[number];
 export type DutyRole = (typeof dutyRole.enumValues)[number];
@@ -88,6 +90,7 @@ export const users = pgTable('users', {
   country: char('country', { length: 2 }).notNull().default('UZ'),
   managedBy: uuid('managed_by'), // boshqariladigan hisob (bola) egasi
   status: userStatus('status').notNull().default('active'),
+  role: userRole('role').notNull().default('user'),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -300,6 +303,7 @@ export const dishes = pgTable(
     imageUrl: text('image_url'),
     videoUrl: text('video_url'),
     favoritesCount: integer('favorites_count').notNull().default(0),
+    deletedAt: tsz('deleted_at'), // muallif o'chirgan: katalogda ko'rinmaydi, eski mahallarda qoladi
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -371,6 +375,7 @@ export const cookbooks = pgTable('cookbooks', {
   moderationStatus: moderationStatus('moderation_status').notNull().default('pending'),
   days: integer('days').notNull().default(7),
   coverUrl: text('cover_url'),
+  deletedAt: tsz('deleted_at'), // o'chirilgan: ro'yxatda ko'rinmaydi, qo'llangan rejalar ishlayveradi
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -584,6 +589,58 @@ export const settlements = pgTable(
     settledAt: tsz('settled_at').notNull().defaultNow(),
   },
   (t) => [index('settlements_group_idx').on(t.groupId)],
+);
+
+// ─────────────── 6. Narxlar ───────────────
+
+/** Kunlik bozor narxlari (respublika o'rtachasi), tarix bilan: har mahsulotga kuniga bitta yozuv */
+export const priceSnapshots = pgTable(
+  'price_snapshots',
+  {
+    id: id(),
+    productId: integer('product_id').notNull(), // manbadagi mahsulot raqami
+    name: text('name').notNull(),
+    unit: displayUnit('unit').notNull(), // kg | g | l | ml | pcs
+    unitQty: real('unit_qty').notNull().default(1), // narx shuncha birlik uchun ("10 dona" → 10)
+    price: money('price').notNull(),
+    prevPrice: money('prev_price'),
+    date: day('date').notNull(),
+    source: text('source').notNull().default('api'), // api | excel
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('price_snapshots_product_date_uq').on(t.productId, t.date), index('price_snapshots_date_idx').on(t.date)],
+);
+
+/** Kunlik sinxronlash holati: qayta urinishlar va "bugun olindi" belgisi */
+export const priceSyncRuns = pgTable('price_sync_runs', {
+  date: day('date').primaryKey(),
+  status: priceSyncStatus('status').notNull(),
+  attempts: integer('attempts').notNull().default(0),
+  nextAttemptAt: tsz('next_attempt_at'),
+  source: text('source').notNull().default('api'),
+  error: text('error'),
+  updatedAt: updatedAt(),
+});
+
+/** Masalliq ↔ narx manbasidagi mahsulot */
+export const ingredientPriceLinks = pgTable('ingredient_price_links', {
+  ingredientId: uuid('ingredient_id').primaryKey().references(() => ingredients.id, { onDelete: 'cascade' }),
+  productId: integer('product_id').notNull(),
+});
+
+/** Guruhning o'z narxi (bozor narxi topilmagan yoki boshqacha bo'lgan masalliq uchun) */
+export const groupIngredientPrices = pgTable(
+  'group_ingredient_prices',
+  {
+    groupId: uuid('group_id').notNull().references(() => groups.id, { onDelete: 'cascade' }),
+    ingredientId: uuid('ingredient_id').notNull().references(() => ingredients.id, { onDelete: 'cascade' }),
+    price: money('price').notNull(),
+    unit: displayUnit('unit').notNull().default('kg'),
+    unitQty: real('unit_qty').notNull().default(1),
+    updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.ingredientId] })],
 );
 
 // ───────────────────────── relations (so'rovlar uchun) ─────────────────────────

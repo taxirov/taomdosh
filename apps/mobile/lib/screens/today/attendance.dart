@@ -88,7 +88,7 @@ class _AttendanceBodyState extends State<_AttendanceBody> {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
             children: [
               ScreenHeader(title: '${mealTypeName(m['mealType'])} · ${hhmm(parseTime(m['eatAt']))}', big: false),
               const SizedBox(height: 16),
@@ -131,6 +131,7 @@ class _AttendanceBodyState extends State<_AttendanceBody> {
                 icon: Icons.lock_outline_rounded,
                 bg: C.terracottaSoft,
                 fg: C.terracottaDark,
+                bold: true,
                 text: locked
                     ? t('Ro‘yxat yopilgan — porsiyalar hisoblab bo‘lingan.')
                     : t('Ro‘yxat {time} da yopiladi — {left} qoldi', {'time': hhmm(parseTime(m['lockAt'])), 'left': duration(left)}),
@@ -142,7 +143,7 @@ class _AttendanceBodyState extends State<_AttendanceBody> {
                 children: [
                   for (final a in _att)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.fromLTRB(14, 6, 8, 6),
                       child: Row(
                         children: [
                           Avatar(name: a['name'], id: a['userId'], faded: _eat[a['userId']] != true),
@@ -166,9 +167,9 @@ class _AttendanceBodyState extends State<_AttendanceBody> {
                               ],
                             ),
                           ),
-                          Switch(
+                          AppSwitch(
                             value: _eat[a['userId']] == true,
-                            activeTrackColor: C.olive,
+                            label: t('{name} qatnashadi', {'name': a['name']}),
                             onChanged: locked || !_canEdit(s, a['userId']) ? null : (v) => setState(() => _eat[a['userId']] = v),
                           ),
                         ],
@@ -211,7 +212,7 @@ class _AttendanceBodyState extends State<_AttendanceBody> {
                     child: Text(t('Jami porsiya'), style: sans(14, color: C.muted)),
                   ),
                   Text(
-                    t('{n} ({e} a’zo + {g} mehmon)', {'n': eating + guests, 'e': eating, 'g': guests}),
+                    t('{n} porsiya ({e} a’zo + {g} mehmon)', {'n': eating + guests, 'e': eating, 'g': guests}),
                     style: sans(15, weight: FontWeight.w800),
                   ),
                 ],

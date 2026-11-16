@@ -7,8 +7,10 @@ import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../admin/moderation.dart';
 import '../auth/goal.dart';
 import '../auth/profile_setup.dart';
+import 'server_url.dart';
 import '../dishes/dishes.dart';
 import '../group/group.dart';
 import 'progress.dart';
@@ -40,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           Row(
             children: [
@@ -101,6 +103,13 @@ class ProfileScreen extends StatelessWidget {
               ),
               item(Icons.favorite_border_rounded, t('Sevimli taomlar'), null, () => open(const DishesScreen(favoritesOnly: true))),
               item(Icons.restaurant_menu_rounded, t('Mening taomlarim'), null, () => open(const DishesScreen(mineOnly: true))),
+              if (s.me?['isAdmin'] == true)
+                item(
+                  Icons.verified_user_outlined,
+                  t('Moderatsiya'),
+                  t('Kutilayotgan taom va cookbooklar'),
+                  () => open(const ModerationScreen()),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -125,6 +134,7 @@ class ProfileScreen extends StatelessWidget {
                 );
                 if (l != null) await s.setLocale(l);
               }),
+              item(Icons.dns_outlined, t('Server manzili'), currentApiBase, () => showServerUrlDialog(context)),
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: C.terracottaDark),
                 title: Text(
@@ -137,6 +147,20 @@ class ProfileScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          CardList(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person_remove_outlined, color: C.terracottaDark),
+                title: Text(
+                  t('Hisobni o‘chirish'),
+                  style: sans(15, weight: FontWeight.w700, color: C.terracottaDark),
+                ),
+                subtitle: Text(t('Shaxsiy ma’lumotlar butunlay o‘chiriladi'), style: sans(12, color: C.muted)),
+                onTap: () => confirmDeleteAccount(context),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Center(
             child: Text('Taomdosh 0.1 · ${t('wellness ilova, tibbiy maslahat emas')}', style: sans(12, color: C.muted)),
@@ -145,4 +169,31 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Hisobni o'chirish: aniq tushuntirilgan tasdiqlash oynasi, so'ng serverda o'chirish
+Future<void> confirmDeleteAccount(BuildContext context) async {
+  final s = context.read<Session>();
+  final yes = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(t('Hisob o‘chirilsinmi?'), style: sans(18, weight: FontWeight.w800)),
+      content: Text(
+        t(
+          'Telefon raqamingiz, profil, vazn o‘lchovlari va sevimlilar butunlay o‘chiriladi, barcha guruhlardan chiqasiz. Guruh xarajatlari tarixi hisob-kitob buzilmasligi uchun ismsiz qoladi. Buni qaytarib bo‘lmaydi.',
+        ),
+        style: sans(14, height: 1.5),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('Bekor qilish'))),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: C.terracottaDark),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(t('Ha, o‘chirish')),
+        ),
+      ],
+    ),
+  );
+  if (yes != true || !context.mounted) return;
+  await guard(context, s.deleteAccount);
 }

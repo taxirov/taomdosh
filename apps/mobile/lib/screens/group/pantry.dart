@@ -47,7 +47,7 @@ class _PantryScreenState extends State<PantryScreen> {
             return RefreshIndicator(
               onRefresh: reload,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                 children: [
                   ScreenHeader(
                     title: t('Zaxira'),
@@ -79,7 +79,8 @@ class _PantryScreenState extends State<PantryScreen> {
                   if (list.isEmpty)
                     EmptyView(
                       icon: Icons.kitchen_outlined,
-                      text: t('Zaxira bo‘sh. Xarid ro‘yxatida “olindi” belgilangan mahsulotlar shu yerga tushadi.'),
+                      title: t('Zaxira bo‘sh'),
+                      text: t('Xarid ro‘yxatida “olindi” belgilangan mahsulotlar shu yerga tushadi.'),
                     )
                   else
                     CardList(

@@ -70,6 +70,9 @@ String longDate(DateTime d) => '${weekdaysLong()[d.weekday - 1]}, ${d.day}-${mon
 /// "5-okt"
 String shortDate(DateTime d) => '${d.day}-${monthsGenitive()[d.month - 1].substring(0, 3)}';
 
+/// "15.11" — narxlar sanasi uchun
+String ddmm(DateTime d) => '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}';
+
 DateTime mondayOf(DateTime d) => DateTime(d.year, d.month, d.day).subtract(Duration(days: d.weekday - 1));
 
 /// "1 soat 9 daqiqa"

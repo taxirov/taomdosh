@@ -18,6 +18,7 @@ import { TelegramBotService } from '../src/modules/auth/telegram-bot.service';
 process.env.AUTH_TEST_PHONES = '*';
 process.env.AUTH_TEST_CODE = '111111';
 process.env.MEAL_LOCK_POLLER = 'off';
+process.env.PRICES_SYNC_ENABLED = 'off'; // testlar tashqi manbaga murojaat qilmaydi
 process.env.TELEGRAM_BOT_USERNAME = 'taomdosh_bot'; // token yo'q — polling yo'q, xabarlar yuborilmaydi
 
 interface Member {

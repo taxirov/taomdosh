@@ -26,3 +26,26 @@ export function toDisplay(qtyG: number, opts: { pieceWeightG?: number | null; de
   if (qtyG >= 100) return { qty: roundUpTo(qtyG, 50), unit: 'g' };
   return { qty: roundUpTo(Math.max(qtyG, 1), 5), unit: 'g' };
 }
+
+export type PriceUnit = 'g' | 'kg' | 'ml' | 'l' | 'pcs';
+
+/**
+ * Teskari o'tkazish: "1 kg", "10 dona", "1 litr" necha gramm.
+ * Dona uchun 1 dona og'irligi, suyuqlik uchun zichlik kerak (zichlik yo'q bo'lsa 1 g/ml deb olinadi).
+ * Aniqlab bo'lmasa (dona, lekin og'irligi noma'lum) — null.
+ */
+export function toGrams(qty: number, unit: PriceUnit, opts: { pieceWeightG?: number | null; density?: number | null }): number | null {
+  if (!(qty > 0)) return null;
+  switch (unit) {
+    case 'g':
+      return qty;
+    case 'kg':
+      return qty * 1000;
+    case 'ml':
+      return qty * (opts.density && opts.density > 0 ? opts.density : 1);
+    case 'l':
+      return qty * 1000 * (opts.density && opts.density > 0 ? opts.density : 1);
+    case 'pcs':
+      return opts.pieceWeightG && opts.pieceWeightG > 0 ? qty * opts.pieceWeightG : null;
+  }
+}

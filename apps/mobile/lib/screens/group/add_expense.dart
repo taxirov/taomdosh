@@ -28,6 +28,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   int get _sum => int.tryParse(_amount.text.replaceAll(RegExp(r'\D'), '')) ?? 0;
 
+  /// Belgilangan mahsulotlarning taxminiy narxi (narxi ma'lumlari bo'yicha)
+  num get _estimate => widget.pending.where((i) => _bought.contains(i['id'])).fold<num>(0, (sum, i) => sum + ((i['estCost'] as num?) ?? 0));
+
   Future<void> _save() async {
     if (_sum <= 0) return showSnack(context, t('Summani kiriting'));
     final s = context.read<Session>();
@@ -55,7 +58,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                 children: [
                   ScreenHeader(title: t('Xarajat kiritish'), close: true, big: false),
                   const SizedBox(height: 20),
@@ -117,9 +120,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             value: _bought.contains(it['id']),
                             onChanged: (v) => setState(() => v == true ? _bought.add(it['id']) : _bought.remove(it['id'])),
                             title: Text('${it['name']} · ${displayQty(it['display'])}', style: sans(14, weight: FontWeight.w600)),
+                            subtitle: it['estCost'] == null
+                                ? null
+                                : Text('~${money(it['estCost'] as num)}', style: sans(12, color: C.muted)),
                           ),
                       ],
                     ),
+                    if (_estimate > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              t('Belgilanganlar taxminan ~{sum}', {'sum': money(_estimate)}),
+                              style: sans(13, weight: FontWeight.w700, color: C.mustardInk),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() => _amount.text = groupDigits(_estimate)),
+                            child: Text(
+                              t('Summaga qo‘yish'),
+                              style: sans(13, weight: FontWeight.w700, color: C.terracotta),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(t('Belgilanganlar zaxiraga qo‘shiladi va ro‘yxatdan o‘chadi.'), style: sans(12, color: C.muted)),
                   ],

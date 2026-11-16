@@ -3,12 +3,16 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { serveAdmin } from './common/admin-static';
+import { serveUploads } from './common/uploads';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // Caddy / tunnel ortida: haqiqiy mijoz IP si X-Forwarded-For dan (limitlar har IP uchun ishlashi uchun)
   app.set('trust proxy', 'loopback, uniquelocal');
   app.setGlobalPrefix('v1');
+  serveUploads(app);
+  serveAdmin(app);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableShutdownHooks();
   const doc = SwaggerModule.createDocument(

@@ -35,6 +35,13 @@ Skript qo'shimcha ravishda:
 API obrazi GitHub Actions'da yig'ilib `ghcr.io/taxirov/taomdosh-api` ga qo'yiladi — server uni yuklab oladi
 (obraz yopiq bo'lsa, skript o'zi yig'adi; tezlik uchun GitHub → Packages → taomdosh-api → visibility: **Public**).
 
+Qo'shimcha sozlamalar (`/opt/taomdosh/.env`, o'zgartirgach `docker compose up -d`):
+- `ADMIN_PHONES=+998901234567` — platforma admini: veb admin panel (`https://<domen>/admin/`), ilovada "Moderatsiya" ekrani va narx faylini qo'lda yuklash;
+- `PRICES_SYNC_ENABLED=off` — kunlik narx yangilashni o'chirish (standart: yoqilgan, har kuni 08:00).
+
+Taom rasmlari `uploads` Docker volume'ida turadi (konteyner yangilanganda saqlanadi). Kechki zaxira nusxa faqat
+bazani oladi — rasmlar uchun: `docker run --rm -v taomdosh_uploads:/u -v /opt/taomdosh-backups:/b alpine tar czf /b/uploads.tgz -C /u .`
+
 Quyida — qo'lda, batafsil yo'l.
 
 MVP serveri: **DigitalOcean Droplet** (Frankfurt, 2 GB RAM, Ubuntu 24.04), Docker Compose bilan

@@ -3,9 +3,9 @@ name: api
 
 on:
   push:
-    paths: ['apps/api/**', '.github/workflows/api.yml']
+    paths: ['apps/api/**', 'apps/admin/**', '.github/workflows/api.yml']
   pull_request:
-    paths: ['apps/api/**', '.github/workflows/api.yml']
+    paths: ['apps/api/**', 'apps/admin/**', '.github/workflows/api.yml']
   workflow_dispatch:
 
 defaults:
@@ -50,9 +50,25 @@ jobs:
       - run: npm run test:e2e
       - run: npm run build
 
+  # Admin panel: tiplar va yig'ish
+  admin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/admin/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
   # main dagi har o'zgarishda tayyor obraz → ghcr.io (serverlar uni yig'may, yuklab oladi)
   image:
-    needs: test
+    needs: [test, admin]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -71,6 +87,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: apps/api
+          build-contexts: adminsrc=apps/admin
           push: true
           tags: |
             ghcr.io/${{ github.repository }}-api:latest

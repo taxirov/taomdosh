@@ -8,6 +8,20 @@
       "when": 1791371262034,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794771282010,
+      "tag": "0001_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794771919464,
+      "tag": "0002_catalog_delete",
+      "breakpoints": true
     }
   ]
 }

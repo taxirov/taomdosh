@@ -74,7 +74,7 @@ class _DishesScreenState extends State<DishesScreen> {
     final body = RefreshIndicator(
       onRefresh: _load,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           Row(
             children: [
@@ -89,7 +89,7 @@ class _DishesScreenState extends State<DishesScreen> {
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: C.terracotta,
-                    minimumSize: const Size(0, 44),
+                    minimumSize: const Size(0, 48),
                     shape: const StadiumBorder(),
                   ),
                   onPressed: () async {
@@ -140,9 +140,29 @@ class _DishesScreenState extends State<DishesScreen> {
           if (_error != null && _items == null)
             ErrorView(error: _error!, onRetry: _load)
           else if (_items == null)
-            const Loading()
+            const SkeletonList(rows: 5)
           else if (list.isEmpty)
-            EmptyView(text: t('Hech narsa topilmadi'))
+            EmptyView(
+              icon: Icons.restaurant_outlined,
+              title: t('Hech narsa topilmadi'),
+              text: widget.favoritesOnly
+                  ? t('Yoqqan taom sahifasida yurakchani bosing — u shu yerda saqlanadi.')
+                  : t('Qidiruvni o‘zgartiring yoki o‘z taomingizni qo‘shing.'),
+              action: widget.favoritesOnly
+                  ? null
+                  : SizedBox(
+                      width: 220,
+                      child: SecondaryButton(
+                        label: t('Taom qo‘shish'),
+                        height: 48,
+                        onPressed: () async {
+                          if (s.groupId == null) return showSnack(context, t('Taom qo‘shish uchun avval guruhga qo‘shiling'));
+                          final created = await Navigator.of(context).push<bool>(route(const AddDishScreen()));
+                          if (created == true) _load();
+                        },
+                      ),
+                    ),
+            )
           else
             GridView.builder(
               shrinkWrap: true,

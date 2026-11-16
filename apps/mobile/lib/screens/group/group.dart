@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
+import '../../format.dart';
 import '../../i18n/strings.dart';
 import '../../state/session.dart';
 import '../../theme.dart';
@@ -12,6 +13,7 @@ import 'expenses.dart';
 import 'group_actions.dart';
 import 'no_group.dart';
 import 'pantry.dart';
+import 'plan_cost.dart';
 import 'shopping.dart';
 
 /// Guruh: tur, a'zolar, taklif kodi, bo'limlarga havolalar
@@ -119,22 +121,26 @@ class _GroupScreenState extends State<GroupScreen> {
     final members = s.members;
     void open(Widget w) => Navigator.of(context).push(route(w));
 
-    Widget link(IconData icon, String title, Widget page) => ListTile(
-      leading: Icon(icon, color: C.terracotta),
-      title: Text(title, style: sans(15, weight: FontWeight.w700)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: C.muted),
-      onTap: () => open(page),
-    );
-
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: s.reloadGroup,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
           children: [
             Row(
               children: [
-                Avatar(name: g['name'], id: g['id'], size: 52, color: C.olive),
+                // Guruh belgisi: 56 px kvadrat, serif bosh harflar
+                Container(
+                  width: 56,
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: C.olive, borderRadius: BorderRadius.circular(18)),
+                  child: Text(
+                    initials(g['name'] as String),
+                    textScaler: TextScaler.noScaling,
+                    style: serif(22, color: Colors.white),
+                  ),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -151,28 +157,23 @@ class _GroupScreenState extends State<GroupScreen> {
             const SizedBox(height: 20),
             Text(t('Guruh turi'), style: sans(13, weight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                for (final k in ['family', 'students', 'team']) ...[
-                  if (k != 'family') const SizedBox(width: 8),
-                  ChoicePill(
-                    label: groupTypeName(k),
-                    selected: g['type'] == k,
-                    expand: true,
-                    height: 44,
-                    onTap: s.isAdmin && g['type'] != k ? () => _setType(s, k) : () {},
-                  ),
-                ],
-              ],
+            Segmented<String>(
+              items: {
+                for (final k in ['family', 'students', 'team']) k: groupTypeName(k),
+              },
+              value: g['type'] as String,
+              onChanged: (k) {
+                if (s.isAdmin && g['type'] != k) _setType(s, k);
+              },
             ),
             const SizedBox(height: 8),
             Text(
               g['splitMode'] == 'shared_pot'
                   ? t('Xarajat: umumiy qozon — ulushlarga bo‘linmaydi.')
                   : t('Xarajat: kim qancha ovqatlangan bo‘lsa, shuncha to‘laydi.'),
-              style: sans(13, color: C.muted, height: 1.4),
+              style: sans(12, color: C.muted, height: 1.4),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             SectionTitle(
               t('A’zolar'),
               trailing: TextButton.icon(
@@ -181,47 +182,85 @@ class _GroupScreenState extends State<GroupScreen> {
                 label: Text(t('Bola qo‘shish'), style: sans(13, weight: FontWeight.w700)),
               ),
             ),
-            const SizedBox(height: 8),
-            CardList(
-              children: [
-                for (final m in members)
-                  InkWell(
-                    onTap: () => _memberMenu(s, m),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      child: Row(
-                        children: [
-                          Avatar(name: m['name'], id: m['userId']),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              m['userId'] == s.userId ? '${m['name']} (${t('siz')})' : m['name'],
-                              style: sans(15, weight: FontWeight.w700),
-                            ),
+            TodayCookBuilder(
+              key: ValueKey('cook-${g['id']}'),
+              builder: (cookId) => CardList(
+                children: [
+                  for (final m in members)
+                    InkWell(
+                      onTap: () => _memberMenu(s, m),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 58),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          child: Row(
+                            children: [
+                              Avatar(name: m['name'], id: m['userId'], size: 38),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  m['userId'] == s.userId ? '${m['name']} (${t('siz')})' : m['name'],
+                                  style: sans(15, weight: FontWeight.w700),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Dizayndagidek matnli yorliqlar: navbatchi — terrakota, admin — kulrang
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 150),
+                                child: Text(
+                                  [
+                                    if (m['userId'] == cookId) t('Bugun navbatchi'),
+                                    if (m['role'] == 'admin') t('Admin'),
+                                    if (m['managedBy'] != null) t('Bola'),
+                                  ].join(' · '),
+                                  textAlign: TextAlign.end,
+                                  style: sans(12, weight: FontWeight.w700, color: m['userId'] == cookId ? C.terracottaDark : C.muted),
+                                ),
+                              ),
+                            ],
                           ),
-                          if (m['role'] == 'admin') Pill(t('Admin'), bg: C.terracottaSoft, fg: C.terracottaDark),
-                          if (m['managedBy'] != null) Pill(t('Bola'), bg: C.mustardSoft, fg: C.mustardInk),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
-            AppCard(
+            // Taklif kodi: to'q kartochka, xantal "Ulashish" tugmasi (taklif matni nusxalanadi)
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              decoration: BoxDecoration(color: C.ink, borderRadius: BorderRadius.circular(18)),
               child: Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(t('Taklif kodi'), style: sans(12, color: C.muted)),
-                        Text(g['inviteCode'], style: sans(22, weight: FontWeight.w800).copyWith(letterSpacing: 2)),
+                        Text(
+                          t('Taklif kodi'),
+                          style: sans(12, weight: FontWeight.w600, color: C.border),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            g['inviteCode'],
+                            style: sans(20, weight: FontWeight.w800, color: const Color(0xFFFFF4E8)).copyWith(letterSpacing: 1.6),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: C.terracotta, shape: const StadiumBorder()),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: C.mustard,
+                      foregroundColor: C.ink,
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     onPressed: () async {
                       await Clipboard.setData(
                         ClipboardData(
@@ -233,20 +272,23 @@ class _GroupScreenState extends State<GroupScreen> {
                       );
                       if (context.mounted) showSnack(context, t('Taklif matni nusxalandi — Telegram’da yuboring'));
                     },
-                    icon: const Icon(Icons.copy_rounded, size: 18),
-                    label: Text(t('Nusxalash')),
+                    child: Text(
+                      t('Ulashish'),
+                      style: sans(14, weight: FontWeight.w800, color: C.ink),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-            CardList(
+            PlanCostCard(key: ValueKey('cost-${g['id']}')),
+            TileGrid(
               children: [
-                link(Icons.event_repeat_rounded, t('Navbatchilik'), const DutyScreen()),
-                link(Icons.shopping_basket_outlined, t('Xarid ro‘yxati'), const ShoppingScreen()),
-                link(Icons.payments_outlined, t('Xarajatlar'), const ExpensesScreen()),
-                link(Icons.kitchen_outlined, t('Zaxira'), const PantryScreen()),
-                if (s.isAdmin) link(Icons.schedule_rounded, t('Ovqat vaqtlari'), const MealSettingsScreen()),
+                QuickTile(t('Navbatchilik'), onTap: () => open(const DutyScreen())),
+                QuickTile(t('Xarid ro‘yxati'), onTap: () => open(const ShoppingScreen())),
+                QuickTile(t('Xarajatlar'), onTap: () => open(const ExpensesScreen())),
+                QuickTile(t('Zaxira'), onTap: () => open(const PantryScreen())),
+                if (s.isAdmin) QuickTile(t('Ovqat vaqtlari'), onTap: () => open(const MealSettingsScreen())),
               ],
             ),
           ],
@@ -474,7 +516,7 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               children: [
                 ScreenHeader(title: t('Ovqat vaqtlari')),
                 const SizedBox(height: 8),
@@ -551,4 +593,36 @@ class _MealSettingsScreenState extends State<MealSettingsScreen> {
       ),
     ),
   );
+}
+
+/// Bugungi navbatchi (oshpaz) kimligini yuklab, ro'yxatga beradi; yuklanmasa — yorliqsiz
+class TodayCookBuilder extends StatefulWidget {
+  const TodayCookBuilder({super.key, required this.builder});
+  final Widget Function(String? cookUserId) builder;
+
+  @override
+  State<TodayCookBuilder> createState() => _TodayCookBuilderState();
+}
+
+class _TodayCookBuilderState extends State<TodayCookBuilder> {
+  String? _cook;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final s = context.read<Session>();
+    final today = ymd(DateTime.now());
+    try {
+      final duty = ((await s.api.get('/groups/${s.groupId}/duty', {'from': today, 'to': today})) as List).cast<Json>();
+      final cook = duty.where((d) => d['dutyRole'] == 'cook');
+      if (mounted && cook.isNotEmpty) setState(() => _cook = cook.first['userId'] as String?);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_cook);
 }

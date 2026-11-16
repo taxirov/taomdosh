@@ -17,10 +17,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsDateString, IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
-import { and, between, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, between, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { AuthUser, CurrentUser, requireMember } from '../../common/auth';
 import { Db, InjectDb } from '../../common/infra.module';
 import {
+  groupMembers,
+  groupPlans,
   groups,
   ingredients,
   mealInstances,
@@ -32,9 +34,11 @@ import {
 } from '../../db/schema';
 import { Locale, normalizeLocale, pickTranslation } from '../../domain/i18n';
 import { addDays, daysBetween, localDate } from '../../domain/schedule';
+import { estimateCost } from '../../domain/prices';
 import { toDisplay } from '../../domain/units';
 import { GroupsModule, GroupsService } from '../groups/groups.module';
 import { mealNeeds, planPortions } from '../meals/portion-planner';
+import { IngredientPrice, PricesModule, PricesService } from '../prices/prices.module';
 
 /** Standart xarid davri — bugundan 7 kun */
 export const DEFAULT_PERIOD_DAYS = 7;
@@ -76,6 +80,7 @@ export class ShoppingService {
   constructor(
     @InjectDb() private readonly db: Db,
     private readonly groupsService: GroupsService,
+    private readonly prices: PricesService,
   ) {}
 
   private async today(groupId: string) {
@@ -142,6 +147,7 @@ export class ShoppingService {
     });
     const view = await this.ingredientView(rows.map((r) => r.ingredientId), locale);
     const names = await this.userNames(rows.map((r) => r.assigneeId));
+    const prices = await this.prices.pricesFor(rows.map((r) => r.ingredientId), groupId);
     const order = { pending: 0, bought: 1, skipped: 2 } as const;
     return rows
       .map((r) => {
@@ -160,9 +166,68 @@ export class ShoppingService {
           assigneeId: r.assigneeId,
           assigneeName: r.assigneeId ? (names.get(r.assigneeId) ?? null) : null,
           boughtAt: r.boughtAt,
+          ...priceView(r.qtyG, prices.get(r.ingredientId)),
         };
       })
       .sort((a, b) => order[a.status] - order[b.status] || a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  }
+
+  /** Olinmagan qatorlar bo'yicha taxminiy jami summa va narxlar sanasi */
+  async estimate(groupId: string, userId: string, locale: Locale) {
+    const items = (await this.list(groupId, userId, locale, { status: 'pending' })).filter((i) => i.status === 'pending');
+    return {
+      total: items.reduce((sum, i) => sum + (i.estCost ?? 0), 0),
+      asOf: await this.prices.latestDate(),
+      itemsCount: items.length,
+      pricedCount: items.filter((i) => i.estCost !== null).length,
+      missing: items.filter((i) => i.estCost === null).map((i) => ({ ingredientId: i.ingredientId, name: i.name })),
+    };
+  }
+
+  /**
+   * Haftalik reja uchun taxminiy xarajat: rejadagi barcha (bekor qilinmagan) mahallarning masalliqlari,
+   * zaxira ayirilmagan holda. Guruh bo'yicha va bir kishi hisobiga.
+   */
+  async planEstimate(groupId: string, userId: string, planId: string, locale: Locale) {
+    await requireMember(this.db, groupId, userId);
+    const [plan] = await this.db.select().from(groupPlans).where(and(eq(groupPlans.id, planId), eq(groupPlans.groupId, groupId)));
+    if (!plan) throw new NotFoundException('plan_not_found');
+    const meals = await this.db
+      .select({ id: mealInstances.id })
+      .from(mealInstances)
+      .where(and(eq(mealInstances.planId, planId), ne(mealInstances.status, 'cancelled')));
+    const plans = await planPortions(this.db, meals.map((m) => m.id));
+    const need = new Map<string, number>();
+    for (const p of plans.values()) {
+      for (const [ing, g] of mealNeeds(p)) need.set(ing, (need.get(ing) ?? 0) + g);
+    }
+    const skip = await this.db.select({ id: ingredients.id }).from(ingredients).where(inArray(ingredients.slug, NOT_SHOPPED));
+    for (const r of skip) need.delete(r.id);
+    const prices = await this.prices.pricesFor([...need.keys()], groupId);
+    const view = await this.ingredientView([...need.keys()], locale);
+    let total = 0;
+    const missing: { ingredientId: string; name: string }[] = [];
+    for (const [ing, g] of need) {
+      const p = prices.get(ing);
+      if (p) total += estimateCost(g, p.perGram);
+      else missing.push({ ingredientId: ing, name: view.get(ing)?.name ?? '' });
+    }
+    const [{ n: people }] = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), isNull(groupMembers.leftAt)));
+    return {
+      planId,
+      weekStart: plan.weekStart,
+      mealsCount: meals.length,
+      people,
+      total,
+      perPerson: people > 0 ? Math.round(total / people / 100) * 100 : total,
+      asOf: await this.prices.latestDate(),
+      itemsCount: need.size,
+      pricedCount: need.size - missing.length,
+      missing: missing.sort((a, b) => a.name.localeCompare(b.name)),
+    };
   }
 
   async addItem(groupId: string, userId: string, locale: Locale, dto: AddItemDto) {
@@ -310,6 +375,16 @@ export class ShoppingService {
   }
 }
 
+/** Qatorning taxminiy narxi: narx topilmasa — null (ilova "narx kiritish" ni taklif qiladi) */
+function priceView(qtyG: number, p: IngredientPrice | undefined) {
+  if (!p) return { estCost: null, priceSource: null, unitPrice: null };
+  return {
+    estCost: estimateCost(qtyG, p.perGram),
+    priceSource: p.source,
+    unitPrice: { price: p.price, unit: p.unit, unitQty: p.unitQty },
+  };
+}
+
 /** qty_g = greatest(qty_g + delta, 0) */
 function sqlGreatest0(delta: number) {
   return sql`greatest(${pantryItems.qtyG} + ${delta}, 0)`;
@@ -331,6 +406,18 @@ export class ShoppingController {
   @Get('shopping')
   list(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Query() q: ListQuery) {
     return this.svc.list(id, u.id, normalizeLocale(u.locale), q);
+  }
+
+  /** Taxminiy jami summa: { total, asOf: 'YYYY-MM-DD', missing: [...] } */
+  @Get('shopping/estimate')
+  estimate(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.svc.estimate(id, u.id, normalizeLocale(u.locale));
+  }
+
+  /** Haftalik reja uchun taxminiy xarajat (guruh va bir kishi hisobiga) */
+  @Get('plans/:planId/estimate')
+  planEstimate(@CurrentUser() u: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Param('planId', ParseUUIDPipe) planId: string) {
+    return this.svc.planEstimate(id, u.id, planId, normalizeLocale(u.locale));
   }
 
   @Post('shopping')
@@ -374,5 +461,5 @@ export class ShoppingController {
   }
 }
 
-@Module({ imports: [GroupsModule], controllers: [ShoppingController], providers: [ShoppingService], exports: [ShoppingService] })
+@Module({ imports: [GroupsModule, PricesModule], controllers: [ShoppingController], providers: [ShoppingService], exports: [ShoppingService] })
 export class ShoppingModule {}

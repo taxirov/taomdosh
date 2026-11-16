@@ -20,12 +20,23 @@ Tekshiruvlar: `flutter analyze`, `flutter test` (tarjima to'liqligi, formatlash,
 ## APK yig'ish
 
 ```bash
-flutter build apk --release --dart-define=API_URL=https://api.taomdosh.uz/v1
+flutter build apk --release --dart-define=API_URL=https://taomdosh.jprq.app/v1
 # → build/app/outputs/flutter-apk/app-release.apk — Telegram orqali yuborish mumkin
 ```
 
 GitHub'da har bir push'da `mobile` workflow APK yig'adi: **Actions → mobile → Artifacts → taomdosh-apk**.
-API manzili repo **Settings → Variables → `API_URL`** dan olinadi.
+API manzili: qo'lda ishga tushirishda `api_url` maydoni → repo **Settings → Variables → `API_URL`** →
+standart `https://taomdosh.jprq.app/v1` (uy serveri + jprq; subdomen boshqacha bo'lsa `API_URL` ni
+`https://<subdomen>.jprq.app/v1` qilib qo'ying).
+
+Yig'ilgan APK'da ham manzilni o'zgartirish mumkin: **Profil → Server manzili** (yoki kirish ekranining pastida).
+Standart qiymat — yig'ishdagi `API_URL`; o'zgartirilsa lokal ma'lumot tozalanadi va qaytadan kirish kerak.
+
+## Oflayn ishlash
+
+Barcha o'qish so'rovlari javobi telefonda saqlanadi (`lib/api/cache.dart`): bugungi va haftalik mahallar, xarid
+ro'yxati, narxlar, guruh ma'lumotlari. Internet bo'lmasa oxirgi saqlangan ma'lumot ko'rsatiladi va ekran tepasida
+"Oflayn" belgisi chiqadi. O'zgartirishlar (qatnashuv, "olindi", xarajat) internet bilan bajariladi.
 
 ### Imzo kaliti (muhim)
 
@@ -52,10 +63,13 @@ Kalit bo'lmasa, APK debug kalit bilan imzolanadi (sinov uchun yetarli). `upload.
 
 | Fayl | Nima |
 |---|---|
-| `api/api_client.dart` | HTTP, tokenlar, 401 da avtomatik refresh |
+| `api/api_client.dart` | HTTP, tokenlar, 401 da avtomatik refresh, fayl yuklash, server manzili |
+| `api/cache.dart` | GET javoblarining lokal nusxasi (oflayn rejim) |
 | `state/session.dart` | Foydalanuvchi, guruhlar, tanlangan guruh, til (provider) |
 | `i18n/` | `t('o‘zbekcha matn')` — ru/en lug'at, uz-Cyrl lotindan avtomatik |
-| `theme.dart`, `widgets/common.dart` | Palitra, tugmalar, kartochkalar, yuklash/xato holatlari |
+| `theme.dart`, `widgets/common.dart` | Palitra, tugmalar, kartochkalar, skeleton / bo'sh / xato / oflayn holatlari, plitkalar |
+| `widgets/image_pick.dart` | Kamera/galereyadan rasm tanlash |
+| `screens/admin` | Moderatsiya (platforma admini) |
 | `screens/auth` | Splash, xush kelibsiz (til tanlash), telefon, Telegram kodi, profil, kunlik reja |
 | `screens/today` | Bugun, qatnashuv va mehmonlar, navbatchi ekrani (porsiyalar, qulflash, baho), eslatmalar |
 | `screens/cookbooks` | Cookbooklar, cookbook ichida (guruhga qo'llash), cookbook yaratish |

@@ -21,6 +21,22 @@ class TaomdoshApp extends StatelessWidget {
       theme: buildTheme(),
       // Til o'zgarsa butun daraxt qayta quriladi
       key: ValueKey(s.locale),
+      // Oflayn belgisi barcha ekranlar ustida: keshdagi oxirgi ma'lumot ko'rsatilayotganini bildiradi
+      builder: (context, child) => ValueListenableBuilder<bool>(
+        valueListenable: s.api.offline,
+        builder: (context, off, _) => Column(
+          children: [
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              alignment: Alignment.topCenter,
+              child: off ? const OfflineBar() : const SizedBox(width: double.infinity),
+            ),
+            Expanded(
+              child: MediaQuery.removePadding(context: context, removeTop: off, child: child!),
+            ),
+          ],
+        ),
+      ),
       home: !s.ready
           ? const SplashScreen()
           : s.offline

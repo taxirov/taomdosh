@@ -17,6 +17,7 @@ import {
   dishSteps,
   dishStepTranslations,
   dishTranslations,
+  ingredientPriceLinks,
   ingredients,
   ingredientTranslations,
 } from '../schema';
@@ -24,6 +25,7 @@ import { dishNutrition } from '../../domain/portions';
 import { COOKBOOKS } from './data/cookbooks';
 import { DISHES } from './data/dishes';
 import { INGREDIENTS } from './data/ingredients';
+import { PRICE_LINKS } from './data/price-links';
 
 type Db = NodePgDatabase<typeof schema>;
 const LOCALES = ['uz', 'ru', 'en'] as const;
@@ -149,8 +151,21 @@ export async function seedCookbooks(db: Db, dishIds: Map<string, string>) {
   }
 }
 
+/** Masalliqlarni narx manbasidagi mahsulotlarga bog'lash */
+export async function seedPriceLinks(db: Db, ingBySlug: Map<string, typeof ingredients.$inferSelect>) {
+  for (const [slug, productId] of Object.entries(PRICE_LINKS)) {
+    const ing = ingBySlug.get(slug);
+    if (!ing) throw new Error(`narx bog'lanishi: masalliq topilmadi — ${slug}`);
+    await db
+      .insert(ingredientPriceLinks)
+      .values({ ingredientId: ing.id, productId })
+      .onConflictDoUpdate({ target: ingredientPriceLinks.ingredientId, set: { productId } });
+  }
+}
+
 export async function seed(db: Db) {
   const ing = await seedIngredients(db);
+  await seedPriceLinks(db, ing);
   const dishIds = await seedDishes(db, ing);
   await seedCookbooks(db, dishIds);
   return { ingredients: ing.size, dishes: dishIds.size, cookbooks: COOKBOOKS.length };
